@@ -13,9 +13,8 @@ from amid.nlst import NLST
 from amid.lidc import LIDC
 from amid.nsclc import NSCLC
 from amid.midrc import MIDRC
-from amid import CacheToDisk
 
-from connectome import Chain, Transform, Filter, Apply, GroupBy, Merge
+from connectome import Chain, Transform, Filter, Apply, GroupBy, Merge, CacheToDisk
 
 from vox2vec.processing import (
     LocationsToSpacing, FlipAxesToCanonical, CropToBox, RescaleToSpacing,
@@ -44,6 +43,7 @@ def prepare_nlst_ids(nlst_dir, patch_size):
 class PretrainDataset(Dataset):
     def __init__(
             self,
+            cache_dir: str,
             spacing: Tuple[float, float, float],
             patch_size: Tuple[int, int, int],
             window_hu: Tuple[float, float],
@@ -75,7 +75,7 @@ class PretrainDataset(Dataset):
             FLARE2022(root=flare_dir),
             Filter(lambda id: id.startswith('TU'), verbose=True),
             Filter(lambda affine: is_diagonal(affine[:3, :3]), verbose=True),
-            CacheToDisk('ids'),
+            CacheToDisk.simple('ids', root=cache_dir),
             parse_affine,
             FlipAxesToCanonical(),
         )
@@ -83,7 +83,7 @@ class PretrainDataset(Dataset):
         nlst = Chain(
             NLST(root=nlst_dir),
             Transform(__inherit__=True, ids=lambda: prepare_nlst_ids(nlst_dir, patch_size)),
-            CacheToDisk('ids'),
+            CacheToDisk.simple('ids', root=cache_dir),
             LocationsToSpacing(),
             Apply(image=lambda x: np.flip(x, axis=(0, 1)).copy())
         )
@@ -114,24 +114,24 @@ class PretrainDataset(Dataset):
                 lidc  # ~1000 thoracic CTs (most patients with lung nodules)
             ),  # ~6550 openly available CTs in total, covering abdomen and thorax domains
             # cache spacing
-            CacheToDisk('spacing'),
+            CacheToDisk.simple('spacing', root=cache_dir)),
             Filter(lambda spacing: spacing[-1] is not None, verbose=True),
-            CacheToDisk('ids'),
+            CacheToDisk.simple('ids', root=cache_dir),
             # cropping, rescaling
             Transform(__inherit__=True, cropping_box=lambda image: mask_to_bbox(image >= BODY_THRESHOLD_HU)),
             CropToBox(axis=(-3, -2, -1)),
             RescaleToSpacing(to_spacing=spacing, axis=(-3, -2, -1), image_fill_value=lambda x: np.min(x)),
             Apply(image=lambda x: np.int16(x)),
-            CacheToDisk('image'),
+            CacheToDisk.simple('image', root=cache_dir),
             Apply(image=lambda x: np.float32(x)),
             # filtering by shape
             Filter(lambda image: np.all(np.array(image.shape) >= patch_size), verbose=True),
-            CacheToDisk('ids'),
+            CacheToDisk.simple('ids', root=cache_dir),
             # adding body_voxels
             Transform(__inherit__=True, body_voxels=lambda image: np.argwhere(get_body_mask(image))),
-            CacheToDisk('body_voxels'),
+            CacheToDisk.simple('body_voxels', root=cache_dir),
             Filter(lambda body_voxels: len(body_voxels) > 0, verbose=True),
-            CacheToDisk('ids'),
+            CacheToDisk.simple('ids', root=cache_dir),
         )
 
         self.pipeline = pipeline

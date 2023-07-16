@@ -1,4 +1,6 @@
 scikit-learn>=1.2.1
+tensorboard==2.13.0 
+tensorboardX==2.6.1
 pytorch-lightning==1.9.5
 pylidc==0.2.3
 imops>=0.7.4,<1.0.0
@@ -6,4 +8,3 @@ connectome>=0.6.0,<1.0.0
 bev>=0.7.1
 amid>=0.9.1
 pdp==0.3.0
-einops==0.6.0

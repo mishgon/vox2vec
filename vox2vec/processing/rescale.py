@@ -5,7 +5,6 @@ import warnings
 from connectome import Transform, Mixin, optional, inverse, Input, positional
 from imops import zoom, zoom_to_shape
 
-from vox2vec.eval.luna.gt_nodules import zoom_gt_nodule
 from vox2vec.utils.misc import normalize_axis_list
 
 
@@ -38,10 +37,6 @@ class _Rescale(Mixin):
                 return zoom(x, _scale_factor, _axis, order=0)
 
     body_mask = mask
-
-    @optional
-    def gt_nodules(gt_nodules, _scale_factor):
-        return [zoom_gt_nodule(n, _scale_factor) for n in gt_nodules]
 
     @inverse
     def sgm(sgm, image: Input, _axis, _sgm_interp_ord):

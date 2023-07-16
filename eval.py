@@ -53,7 +53,6 @@ def main(args):
             num_workers=args.num_workers,
             buffer_size=args.batch_size * 5,
             split=args.split,
-            cache_dir=args.cache_dir
         )
         num_classes = BTCV.num_classes
     else:

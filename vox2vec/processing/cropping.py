@@ -28,15 +28,6 @@ class _CropToBox(Mixin):
     def shape(_box):
         return tuple(_box[1] - _box[0])
 
-    @optional
-    @collect
-    def gt_nodules(gt_nodules, _box):
-        shape = _box[1] - _box[0]
-        for n in gt_nodules:
-            box = n.bbox - _box[0]
-            if np.all(box[1] > 0) and np.all(box[0] < shape):
-                yield n._replace(bbox=limit_box(box, shape))
-
     @inverse
     def sgm(sgm, image: Input, _box, _axis):
         shape = np.array(image.shape)[normalize_axis_list(_axis, image.ndim)]

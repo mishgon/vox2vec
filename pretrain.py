@@ -12,7 +12,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from vox2vec.default_params import *
 from vox2vec.pretrain.data import PretrainDataset
 from vox2vec.utils.data import Pool
-from vox2vec.eval.btcv.data import BTCV
+from vox2vec.eval.btcv import BTCV
 from vox2vec.nn import FPN3d, FPNLinearHead, FPNNonLinearHead
 from vox2vec.pretrain.model import Vox2Vec
 from vox2vec.eval.online_probing import OnlineProbing
