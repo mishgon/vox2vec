@@ -4,17 +4,15 @@ This repository is the official implementation of vox2vec: A Framework for Self-
 
 ## Requirements
 
-Make sure you have installed [torch](https://pytorch.org/) compatible with your CUDA version. To install other requirements run
+Make sure you have installed [torch](https://pytorch.org/) compatible with your CUDA version. To install other requirements, run
 
 ```setup
 git clone https://github.com/mishgon/vox2vec.git && cd vox2vec && pip install -e .
 ```
 
-## Pre-trained model
+## The pre-trained model
 
-You can download pretrained models here:
-
-- [My awesome model](https://drive.google.com/mymodel.pth) trained on ImageNet using parameters x,y,z.
+You can download the pre-trained vox2vec model from [here](https://drive.google.com/file/d/1A27Wucnb4lN22RV8487-qaxCxynKzGkG/view?usp=sharing).
 
 ## Evaluation of the pre-trained model
 
@@ -38,7 +36,7 @@ First, follow the [instructions](https://www.synapse.org/#!Synapse:syn3193805/wi
                 ...
 ```
 
-Also, prepare an empty folder `/path/to/cache` for caching the preprocessed data, and `/path/to/logs` for logging.
+Also, prepare empty folders `/path/to/cache` for caching the preprocessed data, and `/path/to/logs` for logging.
 
 To evaluate the pre-trained model in the linear and non-linear probing setups, run
 ```eval
@@ -63,8 +61,7 @@ You likely get the results close to
 
 ## Pre-training
 
-To pre-train vox2vec, run this command:
-
+To reproduce the pre-training of vox2vec, run
 ```pretrain
 python pretrain.py --input-data <path_to_data> --alpha 10 --beta 20
 ```
