@@ -17,13 +17,14 @@ from vox2vec.utils.misc import save_json
 def parse_args():
     parser = ArgumentParser()
     
+    parser.add_argument('--dataset', default='btcv')
     parser.add_argument('--btcv_dir', required=True)
     parser.add_argument('--cache_dir', required=True)
-    parser.add_argument('--split', type=int, required=True)
-    parser.add_argument('--setup', required=True)
     parser.add_argument('--ckpt')
+    parser.add_argument('--setup', required=True)
     parser.add_argument('--log_dir', required=True)
 
+    parser.add_argument('--split', type=int, default=0)
     parser.add_argument('--spacing', nargs='+', type=float, default=SPACING)
     parser.add_argument('--patch_size', nargs='+', type=int, default=PATCH_SIZE)
 
@@ -35,29 +36,31 @@ def parse_args():
 
     parser.add_argument('--base_channels', type=int, default=BASE_CHANNELS)
     parser.add_argument('--num_scales', type=int, default=NUM_SCALES)
-    parser.add_argument('--deep', default=False, action='store_true')
 
     return parser.parse_args()
 
 
 def main(args):
-    dm = BTCV(
-        root=args.btcv_dir,
-        cache_dir=args.cache_dir,
-        spacing=tuple(args.spacing),
-        window_hu=WINDOW_HU,
-        patch_size=tuple(args.patch_size),
-        batch_size=args.batch_size,
-        num_batches_per_epoch=args.num_batches_per_epoch,
-        num_workers=args.num_workers,
-        buffer_size=args.batch_size * 5,
-        split=args.split,
-        cache_dir=args.cache_dir
-    )
-    num_classes = BTCV.num_classes
+    if args.dataset == 'btcv':
+        dm = BTCV(
+            root=args.btcv_dir,
+            cache_dir=args.cache_dir,
+            spacing=tuple(args.spacing),
+            window_hu=WINDOW_HU,
+            patch_size=tuple(args.patch_size),
+            batch_size=args.batch_size,
+            num_batches_per_epoch=args.num_batches_per_epoch,
+            num_workers=args.num_workers,
+            buffer_size=args.batch_size * 5,
+            split=args.split,
+            cache_dir=args.cache_dir
+        )
+        num_classes = BTCV.num_classes
+    else:
+        raise ValueError(args.dataset)
 
     in_channels = 1
-    backbone = FPN3d(in_channels, args.base_channels, args.num_scales, args.deep)
+    backbone = FPN3d(in_channels, args.base_channels, args.num_scales)
     if args.setup == 'from_scratch':
         head = FPNLinearHead(args.base_channels, args.num_scales, num_classes)
         model = EndToEnd(backbone, head, patch_size=tuple(args.patch_size))
@@ -87,7 +90,10 @@ def main(args):
     else:
         raise ValueError(args.setup)
 
-    logger = TensorBoardLogger(save_dir=args.log_dir, name='')
+    logger = TensorBoardLogger(
+        save_dir=args.log_dir,
+        name=f'eval/{args.dataset}/{args.setup}/split_{args.split}'
+    )
     trainer = pl.Trainer(
         logger=logger,
         callbacks=callbacks,

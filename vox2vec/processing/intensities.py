@@ -5,20 +5,6 @@ from scipy.ndimage import gaussian_filter1d
 from vox2vec.utils.misc import normalize_axis_list
 
 
-def min_max_scale(
-        x: np.ndarray,
-        axis: Union[int, Sequence[int]],
-        nonzero: bool = False,
-        eps: float = 1e-8
-) -> np.ndarray:
-    zero_mask = x == 0
-    x = x - x.min(axis=axis, keepdims=True)
-    x = x / (x.max(axis=axis, keepdims=True) + eps)
-    if nonzero:
-        x[zero_mask] = 0
-    return x
-
-
 def scale_hu(image_hu: np.ndarray, window_hu: Tuple[float, float]) -> np.ndarray:
     min_hu, max_hu = window_hu
     assert min_hu < max_hu

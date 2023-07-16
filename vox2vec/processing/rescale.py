@@ -37,7 +37,7 @@ class _Rescale(Mixin):
                 warnings.simplefilter('ignore')
                 return zoom(x, _scale_factor, _axis, order=0)
 
-    body_mask = lungs_mask = mask
+    body_mask = mask
 
     @optional
     def gt_nodules(gt_nodules, _scale_factor):

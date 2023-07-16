@@ -20,10 +20,6 @@ def collect(func: Callable) -> Callable:
     return wrapper
 
 
-def list_chunk(l: list, chunks: int) -> Sequence[list]:
-    return [list(chunk) for chunk in more_itertools.divide(chunks, l)]
-
-
 def to_numpy(x: torch.Tensor) -> np.ndarray:
     return x.data.cpu().numpy()
 

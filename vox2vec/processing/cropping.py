@@ -23,7 +23,7 @@ class _CropToBox(Mixin):
         if x is not None:
             return crop_to_box(x, _box, _axis)
 
-    mask = body_mask = lungs_mask = optional(image)
+    mask = body_mask = optional(image)
 
     def shape(_box):
         return tuple(_box[1] - _box[0])

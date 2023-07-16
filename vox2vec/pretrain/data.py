@@ -41,7 +41,7 @@ def prepare_nlst_ids(nlst_dir, patch_size):
     return ids
 
 
-class ChestAbdomenPublic(Dataset):
+class PretrainDataset(Dataset):
     def __init__(
             self,
             spacing: Tuple[float, float, float],
@@ -127,16 +127,16 @@ class ChestAbdomenPublic(Dataset):
             # filtering by shape
             Filter(lambda image: np.all(np.array(image.shape) >= patch_size), verbose=True),
             CacheToDisk('ids'),
-            # adding roi_voxels
-            Transform(__inherit__=True, roi_voxels=lambda image: np.argwhere(get_body_mask(image))),
-            CacheToDisk('roi_voxels'),
-            Filter(lambda roi_voxels: len(roi_voxels) > 0, verbose=True),
+            # adding body_voxels
+            Transform(__inherit__=True, body_voxels=lambda image: np.argwhere(get_body_mask(image))),
+            CacheToDisk('body_voxels'),
+            Filter(lambda body_voxels: len(body_voxels) > 0, verbose=True),
             CacheToDisk('ids'),
         )
 
         self.pipeline = pipeline
         self.ids = pipeline.ids
-        self.load_example = pipeline._compile(['image', 'roi_voxels'])
+        self.load_example = pipeline._compile(['image', 'body_voxels'])
         self.patch_size = patch_size
         self.window_hu = window_hu
         self.min_window_hu = min_window_hu
