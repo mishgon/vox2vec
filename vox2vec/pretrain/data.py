@@ -114,7 +114,7 @@ class PretrainDataset(Dataset):
                 lidc  # ~1000 thoracic CTs (most patients with lung nodules)
             ),  # ~6550 openly available CTs in total, covering abdomen and thorax domains
             # cache spacing
-            CacheToDisk.simple('spacing', root=cache_dir)),
+            CacheToDisk.simple('spacing', root=cache_dir),
             Filter(lambda spacing: spacing[-1] is not None, verbose=True),
             CacheToDisk.simple('ids', root=cache_dir),
             # cropping, rescaling
