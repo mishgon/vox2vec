@@ -64,7 +64,7 @@ You likely get the results close to
 
 ## Pre-training
 
-To reproduce the pre-training of vox2vec we need a large dataset, consisting of six publicly available CT datasets: AMOS [2], FLARE2022 [3], NLST [4], NSCLC [5], MIDRC [6]. We use [amid](https://github.com/neuro-ml/amid) package, which provides use with unified interfaces of these datasets as well as many other publicly available medical image datasets. We refer to [amid docs](https://neuro-ml.github.io/amid/0.12.0/) for data downloading instructions.
+To reproduce the pre-training of vox2vec we need a large dataset, consisting of six publicly available CT datasets: AMOS [2], FLARE2022 [3], NLST [4], NSCLC [5], MIDRC [6]. We use [amid](https://github.com/neuro-ml/amid) package, which provides us with unified interfaces of these datasets as well as many other publicly available medical image datasets. We refer to [amid docs](https://neuro-ml.github.io/amid/0.12.0/) for data downloading instructions.
 
 Since you have prepared the data, run
 ```warmup
