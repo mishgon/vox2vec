@@ -22,6 +22,7 @@ def parse_args():
     parser = ArgumentParser()
 
     parser.add_argument('--probing_dataset', default='btcv')
+    parser.add_argument('--cache_dir', required=True)
     parser.add_argument('--log_dir', required=True)
 
     parser.add_argument('--amos_dir')
@@ -50,6 +51,7 @@ def main(args):
     spacing = tuple(args.spacing)
     patch_size = tuple(args.patch_size)
     pretrain_dataset = PretrainDataset(
+        cache_dir=args.cache_dir,
         spacing=spacing,
         patch_size=patch_size,
         window_hu=WINDOW_HU,
@@ -83,6 +85,7 @@ def main(args):
     if args.probing_dataset == 'btcv':
         probing_datamodule = BTCV(
             root=args.btcv_dir,
+            cache_dir=args.cache_dir,
             spacing=spacing,
             window_hu=WINDOW_HU,
             patch_size=patch_size,
@@ -100,10 +103,10 @@ def main(args):
         FPNLinearHead(args.base_channels, args.num_scales, num_classes),
         FPNNonLinearHead(args.base_channels, args.num_scales, num_classes)
     ]
-    probing_callback = OnlineProbing(*heads, patch_size=patch_size, sw_batch_size=args.probing_batch_size)
+    probing_callback = OnlineProbing(*heads, patch_size=patch_size)
 
     trainer = pl.Trainer(
-        logger=TensorBoardLogger(save_dir=args.log_dir, name=''),
+        logger=TensorBoardLogger(save_dir=args.log_dir, name='pretrain/'),
         callbacks=[probing_callback],
         accelerator='gpu',
         max_epochs=-1,
