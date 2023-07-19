@@ -56,8 +56,8 @@ class EndToEnd(pl.LightningModule):
         pred_mask = pred_probas >= self.threshold
         dice_scores = compute_dice_score(pred_mask, gt_mask, reduce=lambda x: x)
         for i, dice_score in enumerate(dice_scores):
-            self.log(f'val/dice_score_for_cls_{i}', dice_score, on_epoch=True)
-        self.log(f'val/avg_dice_score', dice_scores.mean(), on_epoch=True)
+            self.log(f'test/dice_score_for_cls_{i}', dice_score, on_epoch=True)
+        self.log(f'test/avg_dice_score', dice_scores.mean(), on_epoch=True)
 
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=self.lr)

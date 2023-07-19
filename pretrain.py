@@ -21,8 +21,7 @@ from vox2vec.eval.online_probing import OnlineProbing
 def parse_args():
     parser = ArgumentParser()
 
-    parser.add_argument('--pretrain_dataset', required=True)
-    parser.add_argument('--probing_dataset', required=True)
+    parser.add_argument('--probing_dataset', default='btcv')
     parser.add_argument('--log_dir', required=True)
 
     parser.add_argument('--amos_dir')
@@ -81,20 +80,25 @@ def main(args):
     )
 
     # online probing
-    probing_datamodule = BTCV(
-        root=args.btcv_dir,
-        spacing=spacing,
-        window_hu=WINDOW_HU,
-        patch_size=patch_size,
-        batch_size=args.probing_batch_size,
-        num_batches_per_epoch=args.num_batches_per_epoch,
-        num_workers=args.probing_num_workers,
-        buffer_size=100,
-        split=0
-    )
+    if args.probing_dataset == 'btcv':
+        probing_datamodule = BTCV(
+            root=args.btcv_dir,
+            spacing=spacing,
+            window_hu=WINDOW_HU,
+            patch_size=patch_size,
+            batch_size=args.probing_batch_size,
+            num_batches_per_epoch=args.num_batches_per_epoch,
+            num_workers=args.probing_num_workers,
+            buffer_size=100,
+            split=0
+        )
+        num_classes = BTCV.num_classes
+    else:
+        raise NotImplementedError(f'Dataset {args.dataset} is not supported yet.')
+
     heads = [
-        FPNLinearHead(args.base_channels, args.num_scales, probing_datamodule.num_classes),
-        FPNNonLinearHead(args.base_channels, args.num_scales, probing_datamodule.num_classes)
+        FPNLinearHead(args.base_channels, args.num_scales, num_classes),
+        FPNNonLinearHead(args.base_channels, args.num_scales, num_classes)
     ]
     probing_callback = OnlineProbing(*heads, patch_size=patch_size, sw_batch_size=args.probing_batch_size)
 

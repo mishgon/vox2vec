@@ -42,7 +42,7 @@ def parse_args():
 
 def main(args):
     if args.dataset == 'btcv':
-        dm = BTCV(
+        datamodule = BTCV(
             root=args.btcv_dir,
             cache_dir=args.cache_dir,
             spacing=tuple(args.spacing),
@@ -56,7 +56,7 @@ def main(args):
         )
         num_classes = BTCV.num_classes
     else:
-        raise ValueError(args.dataset)
+        raise NotImplementedError(f'Dataset {args.dataset} is not supported.')
 
     in_channels = 1
     backbone = FPN3d(in_channels, args.base_channels, args.num_scales)
@@ -100,11 +100,11 @@ def main(args):
         max_epochs=args.max_epochs,
     )
 
-    trainer.fit(model, dm)
-    dm.train_dataset.pipeline.close()  # kill data loading processes
+    trainer.fit(model, datamodule)
+    datamodule.train_dataset.pipeline.close()  # kill data loading processes
 
     log_dir = Path(logger.log_dir)
-    test_metrics = trainer.test(model, datamodule=dm, ckpt_path=log_dir / 'checkpoints/best.ckpt')
+    test_metrics = trainer.test(model, datamodule=datamodule, ckpt_path=log_dir / 'checkpoints/best.ckpt')
     save_json(test_metrics, log_dir / 'test_metrics.json')
 
 

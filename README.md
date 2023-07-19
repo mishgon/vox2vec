@@ -55,9 +55,12 @@ python eval.py --btcv_dir /path/to/btcv --cache_dir /path/to/cache --setup from_
 
 You likely get the results close to
 
-| Model name         | Top 1 Accuracy  | Top 5 Accuracy |
-| ------------------ |---------------- | -------------- |
-| My awesome model   |     85%         |      95%       |
+| Model name                 | Avg Dice Score on BTCV (split #0) |
+| -------------------------- | --------------------------------- |
+| FPN3d from scratch         | 0.76                              |
+| vox2vec linear probing     | 0.64                              |
+| vox2vec non-linear probing | 0.72                              |
+| vox2vec fine-tuning        | 0.77                              |
 
 ## Pre-training
 
