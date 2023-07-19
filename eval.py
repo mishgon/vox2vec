@@ -64,7 +64,7 @@ def main(args):
         head = FPNLinearHead(args.base_channels, args.num_scales, num_classes)
         model = EndToEnd(backbone, head, patch_size=tuple(args.patch_size))
         callbacks = [
-            ModelCheckpoint(save_top_k=1, monitor='val/ap', filename='best', mode='max'),
+            ModelCheckpoint(save_top_k=1, monitor='val/avg_dice_score', filename='best', mode='max'),
         ]
     elif args.setup == 'probing':
         if args.ckpt is not None:
@@ -75,7 +75,7 @@ def main(args):
         ]
         model = Probing(backbone, *heads, patch_size=tuple(args.patch_size))
         callbacks = [
-            ModelCheckpoint(save_top_k=1, monitor='val/head_1_ap', filename='best', mode='max'),
+            ModelCheckpoint(save_top_k=1, monitor='val/head_1_avg_dice_score', filename='best', mode='max'),
         ]
     elif args.setup == 'fine-tuning':
         if args.ckpt is not None:
@@ -84,7 +84,7 @@ def main(args):
         model = EndToEnd(backbone, head, patch_size=tuple(args.patch_size))
         callbacks = [
             BackboneFinetuning(unfreeze_backbone_at_epoch=args.warmup_epochs),
-            ModelCheckpoint(save_top_k=1, monitor='val/ap', filename='best', mode='max'),
+            ModelCheckpoint(save_top_k=1, monitor='val/avg_dice_score', filename='best', mode='max'),
         ]
     else:
         raise ValueError(args.setup)

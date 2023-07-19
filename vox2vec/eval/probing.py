@@ -45,7 +45,7 @@ class Probing(pl.LightningModule):
         for i, head in enumerate(self.heads):
             pred_logits = head(backbone_outputs)
             loss, logs = compute_binary_segmentation_loss(pred_logits, gt_masks, rois, logs_prefix=f'train/head_{i}_')
-            self.log_dict(logs)
+            self.log_dict(logs, on_epoch=True, on_step=False)
             self.manual_backward(loss)
 
         optimizer.step()
