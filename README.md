@@ -1,6 +1,6 @@
 # vox2vec: A Framework for Self-supervised Contrastive Learning of Voxel-level Representations in Medical Images
 
-This repository is the official implementation of vox2vec: A Framework for Self-supervised Contrastive Learning of Voxel-level Representations in Medical Images.
+This repository is the official implementation of [vox2vec: A Framework for Self-supervised Contrastive Learning of Voxel-level Representations in Medical Images](https://arxiv.org/abs/2307.14725).
 
 ## Requirements
 
@@ -83,8 +83,9 @@ If you found this code helpful, please consider citing:
 @article{goncharov2023vox2vec,
   title={vox2vec: A Framework for Self-supervised Contrastive Learning of Voxel-level Representations in Medical Images},
   author={Goncharov, Mikhail and Soboleva, Vera and Kurmukov, Anvar and Pisov, Maksim and Belyaev, Mikhail},
-  journal={TODO},
-  year={2023}
+  journal={arXiv},
+  year={2023},
+  url={https://arxiv.org/abs/2307.14725}
 }
 ```
 
