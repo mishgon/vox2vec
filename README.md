@@ -10,9 +10,37 @@ Make sure you have installed [torch](https://pytorch.org/) compatible with your 
 git clone https://github.com/mishgon/vox2vec.git && cd vox2vec && pip install -e .
 ```
 
-## The pre-trained model
+## User guide
 
-You can download the pre-trained vox2vec model from [here](https://drive.google.com/file/d/1A27Wucnb4lN22RV8487-qaxCxynKzGkG/view?usp=sharing).
+Use vox2vec to extract voxel-level features of 3D computed tomography (CT) images.
+
+The recommended preprocessing of CT images, before applying vox2vec, includes the following steps:
+- cropping to body;
+- resampling to `1 x 1 x 2 mm3` voxel spacing;
+- intensities clipping to `[-1350, 1000]HU` and rescaling to `[0, 1]` interval.
+
+Since CT images are 3D and usually of high resolution, the common practice is patch-wise deep learning pipelines, when an input image is splitted into (overlapping) patches, a neural network is applied to individual patches, and the patch-wise predictions are then aggregated to obtain a final prediction.
+
+vox2vec can be easily plugged in such pipelines as a patch-wise feature extractor. The recommnded patch size is `(128, 128, 32)`. For such a patch, vox2vec returns a feature pyramid containing `6` feature maps with increasing number of channels and decreasing resolutions. See an example below
+
+```vox2vec
+from vox2vec import vox2vec_contrastive
+
+# the pre-trained model is downloaded from the Huggingface Hub 🤗
+vox2vec = vox2vec_contrastive()
+
+# the recommended input patch size is (128, 128, 32)
+input_patch = torch.rand((3, 1, 128, 128, 32))
+
+# then, the output feature pyramid has size
+# [(3, 16, 128, 128, 32),
+#  (3, 32, 64, 64, 16),
+#  ...,
+#  (3, 512, 4, 4, 1)]
+feature_pyramid = vox2vec(input_patch)  
+```
+
+You can also download the pre-trained weights manually from [here](https://drive.google.com/file/d/1A27Wucnb4lN22RV8487-qaxCxynKzGkG/view?usp=sharing) and initialize the `vox2vec.nn.fpn.FPN3d(in_channels=1, base_channels=16, num_scales=6)` architecture by hands.
 
 ## Evaluation of the pre-trained model
 
