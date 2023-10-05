@@ -17,7 +17,7 @@ Use vox2vec to extract voxel-level features of 3D computed tomography (CT) image
 The recommended preprocessing of CT images, before applying vox2vec, includes the following steps:
 - cropping to body;
 - resampling to `1 x 1 x 2 mm3` voxel spacing;
-- intensities clipping to `[-1350, 1000]HU` and rescaling to `[0, 1]` interval.
+- clipping the intensities to `[-1350, 1000]HU` and rescaling them to `[0, 1]` interval.
 
 Since CT images are 3D and usually of high resolution, the common practice is patch-wise deep learning pipelines, when an input image is splitted into (overlapping) patches, a neural network is applied to individual patches, and the patch-wise predictions are then aggregated to obtain a final prediction.
 
