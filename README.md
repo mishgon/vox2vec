@@ -21,7 +21,7 @@ The recommended preprocessing of CT images, before applying vox2vec, includes th
 
 Since CT images are 3D and usually of high resolution, the common practice is patch-wise deep learning pipelines, when an input image is splitted into (overlapping) patches, a neural network is applied to individual patches, and the patch-wise predictions are then aggregated to obtain a final prediction.
 
-vox2vec can be easily plugged in such pipelines as a patch-wise feature extractor. The recommnded patch size is `(128, 128, 32)`. For such a patch, vox2vec returns a feature pyramid containing `6` feature maps with increasing number of channels and decreasing resolutions. See an example below
+vox2vec can be easily plugged in such pipelines as a patch-wise feature extractor. The recommended patch size is `(128, 128, 32)`. For such a patch, vox2vec returns a feature pyramid containing `6` feature maps with increasing number of channels and decreasing resolutions. See an example below
 
 ```vox2vec
 from vox2vec import vox2vec_contrastive
