@@ -1,1 +1,1 @@
-from .nn.fpn import fpn3d
+from .nn.pretrained import vox2vec_contrastive, vox2vec_vicreg

@@ -2,7 +2,6 @@ from typing import *
 
 import torch
 from torch import nn
-from huggingface_hub import hf_hub_download, scan_cache_dir
 
 from vox2vec.default_params import * 
 from .blocks import ResBlock3d, StackMoreLayers
@@ -149,27 +148,3 @@ class FPNNonLinearHead(nn.Module):
         x = self.final_block(x)
 
         return x
-    
-
-def fpn3d(
-        in_channels: int = 1,
-        base_channels: int = BASE_CHANNELS,
-        num_scales: int = NUM_SCALES,
-        pretrained: bool = False
-) -> nn.Module:
-    model = FPN3d(
-        in_channels=1,
-        base_channels=BASE_CHANNELS,
-        num_scales=NUM_SCALES
-    )
-    if pretrained:
-        print('Downloading pretrained weights from Hugging Face Hub 🤗 ...')
-        weights_path = hf_hub_download('FalconLight/vox2vec', 'weights/fpn/vox2vec.pt')
-        model.load_state_dict(torch.load(weights_path))
-        print('Model had been initialized ✅')
-        print('Removing cache 🗑️ ...')
-        revision = weights_path.split('/')[-4]
-        delete_strategy = scan_cache_dir().delete_revisions(revision)
-        delete_strategy.execute()
-
-    return model
