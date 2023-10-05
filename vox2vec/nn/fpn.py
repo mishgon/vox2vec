@@ -3,11 +3,18 @@ from typing import *
 import torch
 from torch import nn
 
+from vox2vec.default_params import * 
 from .blocks import ResBlock3d, StackMoreLayers
 
 
 class FPN3d(nn.Module):
-    def __init__(self, in_channels: int, base_channels: int, num_scales: int, deep: bool = False) -> None:
+    def __init__(
+            self, 
+            in_channels: int, 
+            base_channels: int, 
+            num_scales: int, 
+            deep: bool = False
+    ) -> None:
         """Feature Pyramid Network (FPN) with 3D UNet architecture.
 
         Args:

@@ -8,3 +8,4 @@ connectome>=0.6.0,<1.0.0
 bev>=0.7.1
 amid>=0.9.1
 pdp==0.3.0
+huggingface_hub==0.16.4
