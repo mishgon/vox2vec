@@ -57,10 +57,10 @@ You likely get the results close to
 
 | Model                      | Avg Dice Score |
 | -------------------------- | -------------- |
-| FPN3d from scratch         | 0.76           |
-| vox2vec linear probing     | 0.64           |
-| vox2vec non-linear probing | 0.72           |
-| vox2vec fine-tuning        | 0.77           |
+| FPN3d from scratch         | 0.77 +- 0.03   |
+| vox2vec linear probing     | 0.65 +- 0.01   |
+| vox2vec non-linear probing | 0.73 +- 0.01   |
+| vox2vec fine-tuning        | 0.78 +- 0.02   |
 
 ## Pre-training
 
