@@ -51,7 +51,7 @@ def main(args):
             batch_size=args.batch_size,
             num_batches_per_epoch=args.num_batches_per_epoch,
             num_workers=args.num_workers,
-            buffer_size=args.batch_size * 5,
+            prefetch_factor=1,
             split=args.split,
         )
         num_classes = BTCV.num_classes
@@ -101,7 +101,6 @@ def main(args):
     )
 
     trainer.fit(model, datamodule)
-    datamodule.train_dataset.pipeline.close()  # kill data loading processes
 
     log_dir = Path(logger.log_dir)
     test_metrics = trainer.test(model, datamodule=datamodule, ckpt_path=log_dir / 'checkpoints/best.ckpt')

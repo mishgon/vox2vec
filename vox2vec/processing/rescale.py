@@ -12,7 +12,7 @@ class _Rescale(Mixin):
     def image(image, _scale_factor, _axis, _image_fill_value):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            return zoom(image, _scale_factor, _axis, fill_value=_image_fill_value)
+            return zoom(image, _scale_factor, _axis, fill_value=_image_fill_value, backend='Scipy')
 
     @optional
     def spacing(spacing, _scale_factor, _axis):
@@ -34,14 +34,14 @@ class _Rescale(Mixin):
         if x is not None:
             with warnings.catch_warnings():
                 warnings.simplefilter('ignore')
-                return zoom(x, _scale_factor, _axis, order=0)
+                return zoom(x, _scale_factor, _axis, order=0, backend='Scipy')
 
     body_mask = mask
 
     @inverse
     def sgm(sgm, image: Input, _axis, _sgm_interp_ord):
         shape = np.array(image.shape)[normalize_axis_list(_axis, image.ndim)]
-        return zoom_to_shape(sgm, shape, _axis, order=_sgm_interp_ord)
+        return zoom_to_shape(sgm, shape, _axis, order=_sgm_interp_ord, backend='Scipy')
 
 
 class RescaleToSpacing(Transform, _Rescale):
