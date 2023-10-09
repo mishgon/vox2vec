@@ -13,7 +13,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/neuro-ml/vox2vec',
-    author='M. Goncharov, V. Soboleva, E. Soboleva',
+    author='M. Goncharov, V. Soboleva',
     author_email='m.goncharov@ira-labs.com',
     packages=find_packages(include=('vox2vec',)),
     python_requires='>=3.6',

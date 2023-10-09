@@ -17,7 +17,7 @@ from vox2vec.processing import (
     sample_patches, get_body_mask, BODY_THRESHOLD_HU
 )
 from vox2vec.utils.split import kfold
-from vox2vec.utils.data import VanillaDataset, Pool
+from vox2vec.utils.data import VanillaDataset, ResizeByRandomSampling
 
 
 LABELS = {
@@ -90,7 +90,7 @@ class BTCV(pl.LightningDataModule):
             batch_size: int,
             num_batches_per_epoch: Optional[int],
             num_workers: int,
-            buffer_size: int,
+            prefetch_factor: int,
             split: int,
             num_splits: int = 5,
             val_size: Union[float, int] = 1,
@@ -139,16 +139,14 @@ class BTCV(pl.LightningDataModule):
         load_val_example = load_test_example = _load_train_example
         load_pred_example = source._compile(['image', 'affine'])
 
-        self.train_dataset = Pool(
-            VanillaDataset(train_ids, load_train_example),
-            num_samples=num_batches_per_epoch,
-            num_workers=num_workers,
-            buffer_size=buffer_size
-        )
+        self.train_dataset = ResizeByRandomSampling(VanillaDataset(train_ids, load_train_example), num_batches_per_epoch)
         self.val_dataset = VanillaDataset(val_ids, load_val_example)
         self.test_dataset = VanillaDataset(test_ids, load_test_example)
         self.pred_dataset = VanillaDataset(pred_ids, load_pred_example)
         self.pred_decorator = preprocessing._decorate(['image', 'body_mask'], 'sgm')
+        
+        self.num_workers = num_workers
+        self.prefetch_factor = prefetch_factor
 
     def prepare_data(self) -> None:
         pass
@@ -157,7 +155,12 @@ class BTCV(pl.LightningDataModule):
         pass
 
     def train_dataloader(self) -> DataLoader:
-        return DataLoader(self.train_dataset, batch_size=None)
+        return DataLoader(
+            self.train_dataset,
+            batch_size=None,
+            num_workers=self.num_workers,
+            prefetch_factor=self.prefetch_factor
+        )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(self.val_dataset, batch_size=None)

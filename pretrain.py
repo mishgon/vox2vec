@@ -11,7 +11,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 from vox2vec.default_params import *
 from vox2vec.pretrain.data import PretrainDataset
-from vox2vec.utils.data import Pool
+from vox2vec.utils.data import ResizeByRandomSampling
 from vox2vec.eval.btcv import BTCV
 from vox2vec.nn import FPN3d, FPNLinearHead, FPNNonLinearHead
 from vox2vec.pretrain.model import Vox2Vec
@@ -65,13 +65,13 @@ def main(args):
         midrc_dir=args.midrc_dir,
         nsclc_dir=args.nsclc_dir,
     )
-    pretrain_pool = Pool(
-        dataset=pretrain_dataset,
-        num_samples=args.num_batches_per_epoch,
+    pretrain_dataset = ResizeByRandomSampling(pretrain_dataset, size=args.num_batches_per_epoch)
+    pretrain_dataloader = DataLoader(
+        pretrain_dataset,
+        batch_size=None,
         num_workers=args.pretrain_num_workers,
-        buffer_size=1000
+        prefetch_factor=16
     )
-    pretrain_dataloader = DataLoader(pretrain_pool, batch_size=None)
 
     in_channels = 1
     backbone = FPN3d(in_channels, args.base_channels, args.num_scales)
@@ -92,7 +92,7 @@ def main(args):
             batch_size=args.probing_batch_size,
             num_batches_per_epoch=args.num_batches_per_epoch,
             num_workers=args.probing_num_workers,
-            buffer_size=100,
+            prefetch_factor=16,
             split=0
         )
         num_classes = BTCV.num_classes
@@ -121,8 +121,6 @@ def main(args):
         },
         val_dataloaders=probing_datamodule.val_dataloader(),
     )
-    pretrain_pool.pipeline.close()
-    probing_datamodule.train_dataset.pipeline.close()
 
 
 if __name__ == '__main__':

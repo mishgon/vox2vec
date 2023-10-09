@@ -51,7 +51,7 @@ def main(args):
             batch_size=args.batch_size,
             num_batches_per_epoch=args.num_batches_per_epoch,
             num_workers=args.num_workers,
-            buffer_size=args.batch_size * 5,
+            prefetch_factor=16,
             split=args.split,
         )
         num_classes = BTCV.num_classes
