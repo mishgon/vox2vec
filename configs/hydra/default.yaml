@@ -1,0 +1,19 @@
+# https://hydra.cc/docs/configure_hydra/intro/
+
+# disable logging (because connectome, tarn are logging tons of bullshit...)
+defaults:
+  - override hydra_logging: disabled
+  - override job_logging: disabled
+
+# output directory, generated dynamically on each run
+run:
+  dir: ${paths.logs_dirpath}/${logs_group}/runs/${now:%Y-%m-%d}_${now:%H-%M-%S}
+sweep:
+  dir: ${paths.logs_dirpath}/${logs_group}/multiruns/${now:%Y-%m-%d}_${now:%H-%M-%S}
+  subdir: ${hydra.job.num}
+
+# log git commit hash
+callbacks:
+  git_info:
+    _target_: hydra_callbacks.GitInfo
+    clean: true

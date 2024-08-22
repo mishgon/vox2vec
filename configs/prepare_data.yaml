@@ -1,0 +1,14 @@
+defaults:
+  - paths: default
+  - hydra: no_outputs
+  - _self_
+
+# preprocessing params
+min_series_length: 128
+voxel_spacing: [0.75, 0.75, 2.0]
+hu_pivots: [-1000.0, -200.0, 200.0, 1500.0]
+rescaled_pivots: [0.0, 0.33, 0.67, 1.0]
+clahe: true  # whether to apply Contrast Limited Adaptive Histogram Equalization (CLAHE) to the images 
+clahe_clip_limit: 0.025
+
+num_workers: 16
