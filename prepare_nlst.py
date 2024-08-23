@@ -78,6 +78,9 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
     box = mask_to_bbox(image > image.min())
     image = crop_to_box(image, box, num_threads=-1, backend='Scipy')
 
+    if any(image.shape[i] < config.min_image_size[i] for i in range(3)):
+        return
+
     # get body binary mask
     body_mask = get_body_mask(image)
 
