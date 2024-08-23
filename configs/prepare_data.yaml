@@ -11,4 +11,4 @@ rescaled_pivots: [0.0, 0.33, 0.67, 1.0]
 clahe: true  # whether to apply Contrast Limited Adaptive Histogram Equalization (CLAHE) to the images 
 clahe_clip_limit: 0.025
 
-num_workers: 16
+num_workers: 32

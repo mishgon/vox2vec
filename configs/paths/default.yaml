@@ -1,15 +1,29 @@
-# paths to the downloaded datasets
-nlst_dirpath: /home/jovyan/misha/data/nlst/NLST
+# paths to the downloaded data
+nlst_dirpath: /home/jovyan/misha/data/nlst
+amos_dirpath: /home/jovyan/misha/data/amos
+abdomen_atlas_dirpath: /home/jovyan/misha/data/abdomen_atlas
+flare23_dirpath: /home/jovyan/misha/data/flare23
+lidc_dirpath: /home/jovyan/misha/data/lidc
+midrc_ricord_1a_dirpath: /home/jovyan/misha/data/midrc_ricord_1a
 
-# path to the preprocessed data
-data_dirpath: /home/jovyan/misha/projects/vox2vec_public/data
+# paths to the preprocessed data
+prep_nlst_dirpath: /home/jovyan/misha/prep_data/nlst
+prep_amos_ct_labeled_dirpath: /home/jovyan/misha/prep_data/amos_ct_labeled
+prep_amos_ct_unlabeled_dirpath: /home/jovyan/misha/prep_data/amos_ct_unlabeled
+prep_abdomen_atlas_dirpath: /home/jovyan/misha/prep_data/abdomen_atlas
+prep_flare23_train_labeled_dirpath: /home/jovyan/misha/prep_data/flare23_train_labeled
+prep_flare23_train_unlabeled_dirpath: /home/jovyan/misha/prep_data/flare23_train_unlabeled
+prep_flare23_val_labeled_dirpath: /home/jovyan/misha/prep_data/flare23_val_labeled
+prep_lidc_dirpath: /home/jovyan/misha/prep_data/lidc
+prep_midrc_ricord_1a_dirpath: /home/jovyan/misha/prep_data/midrc_ricord_1a
 
+# under this path all experiments' logs are saved
 logs_dirpath: /home/jovyan/misha/experiments/vox2vec_public
 
-# path to output directory, created dynamically by hydra
+# path to the output directory, created dynamically by hydra
 # path generation pattern is specified in `configs/hydra/default.yaml`
 # use it to store all files generated during a particular run, like ckpts and metrics
 output_dir: ${hydra:runtime.output_dir}
 
-# path to working directory
+# path to the working directory
 work_dir: ${hydra:runtime.cwd}
