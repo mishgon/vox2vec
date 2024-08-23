@@ -57,7 +57,7 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
         image = get_series_image(series)
         voxel_spacing = get_series_voxel_spacing(series)
         om = get_series_orientation_matrix(series)
-    except (AttributeError, ValueError) as e:
+    except (AttributeError, ValueError, NotImplementedError) as e:
         warnings.warn(f'Series at {str(series_dirpath)} fails with {e.__class__.__name__}: {str(e)}')
         return
 
@@ -100,10 +100,9 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
 
 @hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
 def main(config: DictConfig):
-    nlst_dirpath = Path(config.paths.nlst_dirpath)
-    patient_dirpaths = list(nlst_dirpath.glob('NLST/*'))
-    prep_nlst_dirpath = Path(config.paths.prep_nlst_dirpath)
-    prep_nlst_dirpath.mkdir(parents=True, exist_ok=True)
+    patient_dirpaths = list(Path(config.paths.nlst_dirpath).glob('NLST/*'))
+
+    Path(config.paths.prep_nlst_dirpath).mkdir(parents=True, exist_ok=True)
 
     ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(patient_dirpaths))(
         (prepare_patient, [patient_dirpath, config], {}) for patient_dirpath in patient_dirpaths
