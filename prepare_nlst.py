@@ -44,11 +44,12 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
     # read series
     series = load_series(series_dirpath)
 
-    # drop non-axial series
-    if get_series_slice_plane(series) != Plane.Axial:
-        return
-
+    # extract image, voxel spacing and orientation matrix from dicoms
+    # drop non-axial series and series with invalid tags
     try:
+        if get_series_slice_plane(series) != Plane.Axial:
+            raise ValueError('Series is not axial')
+
         series = drop_duplicated_slices(series)
         series = order_series(series)
 
