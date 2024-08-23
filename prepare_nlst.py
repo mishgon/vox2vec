@@ -34,7 +34,7 @@ def load_series(series_dirpath: Path) -> List[pydicom.FileDataset]:
     return [pydicom.dcmread(filepath) for filepath in series_dirpath.glob('*.dcm')]
 
 
-def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
+def prepare_patient(patient_dirpath: Path, data_dirpath: Path, config: DictConfig) -> None:
     series_dirpath = max(iterate_series_dirpaths(patient_dirpath), key=estimate_series_length)
 
     # drop series if it is still too short
@@ -88,21 +88,22 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
     if config.clahe:
         image = equalize_adapthist(image, clip_limit=config.clahe_clip_limit)
 
-    data_dirpath = Path(config.paths.data_dirpath)
     save_dirpath = data_dirpath / series_uid
-    save_dirpath.mkdir(parents=True, exist_ok=True)
+    save_dirpath.mkdir()
     save_numpy(image.astype('float16'), save_dirpath / 'image.npy.gz', compression=1, timestamp=0)
     save_json(voxel_spacing, save_dirpath / 'voxel_spacing.json')
-    save_numpy(body_mask, save_dirpath / 'body_mask.npy.gz', compression=1, timestamp=0)
+    save_numpy(body_mask.astype('bool'), save_dirpath / 'body_mask.npy.gz', compression=1, timestamp=0)
 
 
 @hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
 def main(config: DictConfig):
     nlst_dirpath = Path(config.paths.nlst_dirpath)
     patient_dirpaths = list(nlst_dirpath.iterdir())
+    data_dirpath = Path(config.data_dirpath)
+    data_dirpath.mkdir(parents=True, exist_ok=True)
 
     ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(patient_dirpaths))(
-        (prepare_patient, [patient_dirpath, config], {}) for patient_dirpath in patient_dirpaths
+        (prepare_patient, [patient_dirpath, data_dirpath, config], {}) for patient_dirpath in patient_dirpaths
     )
 
 
