@@ -1,9 +1,11 @@
-from typing import List, Iterable
 from pathlib import Path
 from omegaconf import DictConfig
 import hydra
 import warnings
-import pydicom
+import numpy as np
+
+import pylidc as pl
+from pylidc.utils import consensus
 
 from vox2vec.preprocessing.dicom import (
     get_series_uid, Plane, get_series_slice_plane, drop_duplicated_slices, order_series,
@@ -15,34 +17,17 @@ from vox2vec.utils.misc import ProgressParallel
 from vox2vec.utils.io import save_numpy, save_json
 
 
-def iterate_series_dirpaths(patient_dirpath: Path) -> Iterable[Path]:
-    for study_dirpath in patient_dirpath.iterdir():
-        study_dirpath, = study_dirpath.iterdir()
-        for path in study_dirpath.iterdir():
-            if path.is_dir():
-                yield path
-
-
-def estimate_series_length(series_dirpath: Path) -> int:
-    return len(list(series_dirpath.glob('*.dcm')))
-
-
-def load_series(series_dirpath: Path) -> List[pydicom.FileDataset]:
-    return [pydicom.dcmread(filepath) for filepath in series_dirpath.glob('*.dcm')]
-
-
-def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
-    series_dirpath = max(iterate_series_dirpaths(patient_dirpath), key=estimate_series_length)
+def prepare_scan(scan: pl.Scan, config: DictConfig):
+    # read series
+    series = scan.load_all_dicom_images(verbose=False)
 
     # drop too short series
-    if estimate_series_length(series_dirpath) < config.min_series_length:
+    if len(series) < config.min_series_length:
         return
-
-    # read series
-    series = load_series(series_dirpath)
 
     # extract image, voxel spacing and orientation matrix from dicoms
     # drop non-axial series and series with invalid tags
+    series_uid = get_series_uid(series)
     try:
         if get_series_slice_plane(series) != Plane.Axial:
             raise ValueError('Series is not axial')
@@ -50,21 +35,29 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
         series = drop_duplicated_slices(series)
         series = order_series(series)
 
-        series_uid = get_series_uid(series)
         image = get_series_image(series)
         voxel_spacing = get_series_voxel_spacing(series)
         om = get_series_orientation_matrix(series)
     except (AttributeError, ValueError, NotImplementedError) as e:
-        warnings.warn(f'Series at {str(series_dirpath)} fails with {e.__class__.__name__}: {str(e)}')
+        warnings.warn(f'Series {series_uid} fails with {e.__class__.__name__}: {str(e)}')
         return
+
+    # create mask using pylidc
+    mask = np.zeros(image.shape, dtype=bool)
+    for anns in scan.cluster_annotations():
+        cmask, cbbox, _ = consensus(anns)
+        mask[cbbox] = cmask
+    # pylidc stacks slices in the other order than us
+    mask = np.flip(mask, -1)
 
     # to canonical orientation
     image, voxel_spacing = to_canonical_orientation(image, voxel_spacing, om)
+    mask, _ = to_canonical_orientation(mask, None, om)
 
     # preprocessing
-    data = Data(image, voxel_spacing)
+    data = Data(image, voxel_spacing, mask)
     data = preprocess(data, config.preprocessing)
-    image, voxel_spacing, _, body_mask = data
+    image, voxel_spacing, mask, body_mask = data
 
     # drop images "without body"
     if not body_mask.any():
@@ -74,19 +67,20 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
     if any(image.shape[i] < config.min_image_size[i] for i in range(3)):
         return
 
-    save_dirpath = Path(config.paths.prep_nlst_dirpath) / series_uid
+    save_dirpath = Path(config.paths.prep_lidc_dirpath) / series_uid
     save_dirpath.mkdir(parents=True)
     save_numpy(image.astype('float16'), save_dirpath / 'image.npy.gz', compression=1, timestamp=0)
     save_json(voxel_spacing, save_dirpath / 'voxel_spacing.json')
+    save_numpy(mask, save_dirpath / 'mask.npy.gz', compression=1, timestamp=0)
     save_numpy(body_mask, save_dirpath / 'body_mask.npy.gz', compression=1, timestamp=0)
 
 
 @hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
 def main(config: DictConfig):
-    patient_dirpaths = list(Path(config.paths.nlst_dirpath).glob('NLST/*'))
+    scans = pl.query(pl.Scan).all()
 
-    ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(patient_dirpaths), desc='Preparing NLST')(
-        (prepare_patient, [patient_dirpath, config], {}) for patient_dirpath in patient_dirpaths
+    ProgressParallel(n_jobs=config.num_workers, backend='threading', total=len(scans), desc='Preparing LIDC')(
+        (prepare_scan, [scan, config], {}) for scan in scans
     )
 
 

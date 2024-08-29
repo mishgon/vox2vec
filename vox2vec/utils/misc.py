@@ -69,12 +69,13 @@ def mask_to_bbox(mask: np.ndarray) -> np.ndarray:
 
 
 class ProgressParallel(Parallel):
-    def __init__(self, *args, total=None, **kwargs):
+    def __init__(self, *args, total=None, desc=None, **kwargs):
         self._total = total
+        self._desc = desc
         super().__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
-        with tqdm(total=self._total) as self._pbar:
+        with tqdm(total=self._total, desc=self._desc) as self._pbar:
             return super().__call__(*args, **kwargs)
 
     def print_progress(self):

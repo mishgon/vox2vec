@@ -1,4 +1,4 @@
-from typing import Sequence, Tuple
+from typing import Sequence, Tuple, Optional
 from enum import Enum
 import itertools
 import numpy as np
@@ -66,9 +66,11 @@ def get_series_slice_plane(series: Series) -> Plane:
     return orientation_matrix_to_slice_plane(get_series_orientation_matrix(series))
 
 
-def to_canonical_orientation(image: np.ndarray, voxel_spacing: Tuple[int, int, int], om: np.ndarray) -> np.ndarray:
-    om = om.copy()  # there will be some inplace operations
-
+def to_canonical_orientation(
+        image: np.ndarray,
+        voxel_spacing: Optional[Tuple[int, int, int]],
+        om: np.ndarray
+) -> np.ndarray:
     planes = orientation_matrix_to_image_planes(om)
 
     if set(planes) != {Plane.Sagittal, Plane.Coronal, Plane.Axial}:
@@ -79,17 +81,18 @@ def to_canonical_orientation(image: np.ndarray, voxel_spacing: Tuple[int, int, i
  
     if planes[0] == Plane.Coronal:
         image = image.transpose((1, 0, 2))
-        voxel_spacing = tuple(voxel_spacing[i] for i in [1, 0, 2])
+        if voxel_spacing is not None:
+            voxel_spacing = tuple(voxel_spacing[i] for i in [1, 0, 2])
         om = om[[1, 0, 2]]
 
     if om[1, 1] < 0:
         image = np.flip(image, axis=0)
-        om[1, 1] = -om[1, 1]
     if om[0, 0] < 0:
         image = np.flip(image, axis=1)
-        om[0, 0] = -om[0, 0]
 
-    return image, voxel_spacing, om
+    image = image.copy()
+
+    return image, voxel_spacing
 
 
 def order_series(series: Series) -> Series:
