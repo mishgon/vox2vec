@@ -10,7 +10,7 @@ from vox2vec.preprocessing.dicom import (
     get_series_image, get_series_voxel_spacing, get_series_orientation_matrix,
     to_canonical_orientation
 )
-from vox2vec.preprocessing.common import preprocess, Data, get_body_mask
+from vox2vec.preprocessing.common import preprocess, Data
 from vox2vec.utils.misc import ProgressParallel
 from vox2vec.utils.io import save_numpy, save_json
 
@@ -28,7 +28,7 @@ def estimate_series_length(series_dirpath: Path) -> int:
 
 
 def load_series(series_dirpath: Path) -> List[pydicom.FileDataset]:
-    return [pydicom.dcmread(filepath) for filepath in series_dirpath.glob('*.dcm')]
+    return list(map(pydicom.dcmread, series_dirpath.glob('*.dcm')))
 
 
 def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
@@ -74,7 +74,7 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
     if any(image.shape[i] < config.min_image_size[i] for i in range(3)):
         return
 
-    save_dirpath = Path(config.paths.prep_nlst_dirpath) / series_uid
+    save_dirpath = Path(config.paths.nlst_dirpath) / series_uid
     save_dirpath.mkdir(parents=True)
     save_numpy(image.astype('float16'), save_dirpath / 'image.npy.gz', compression=1, timestamp=0)
     save_json(voxel_spacing, save_dirpath / 'voxel_spacing.json')
@@ -82,8 +82,8 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
 
 
 @hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
-def main(config: DictConfig):
-    patient_dirpaths = list(Path(config.paths.nlst_dirpath).glob('NLST/*'))
+def main(config: DictConfig): 
+    patient_dirpaths = list(Path(config.paths.nlst_src_dirpath).glob('NLST/*'))
 
     ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(patient_dirpaths), desc='Preparing NLST')(
         (prepare_patient, [patient_dirpath, config], {}) for patient_dirpath in patient_dirpaths

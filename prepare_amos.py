@@ -5,10 +5,9 @@ import hydra
 import zipfile
 import gzip
 import nibabel
-import numpy as np
 
 from vox2vec.preprocessing.nifty import affine_to_voxel_spacing, to_canonical_orientation
-from vox2vec.preprocessing.common import preprocess, Data, get_body_mask
+from vox2vec.preprocessing.common import preprocess, Data
 from vox2vec.utils.misc import ProgressParallel
 from vox2vec.utils.io import save_numpy, save_json
 
@@ -22,7 +21,7 @@ DROP_IDS = (
 
 def get_ids(config: DictConfig):
     labeled_train_ids, val_ids, test_ids = [], [], []
-    with zipfile.ZipFile(Path(config.paths.amos_dirpath) / 'amos22.zip') as zf:
+    with zipfile.ZipFile(Path(config.paths.amos_src_dirpath) / 'amos22.zip') as zf:
         for name in zf.namelist():
             if not name.endswith('.nii.gz'):
                 continue
@@ -46,7 +45,7 @@ def get_ids(config: DictConfig):
             'amos22_unlabeled_ct_5900_6199.zip',
             'amos22_unlabeled_ct_6200_6899.zip',
     ]:
-        with zipfile.ZipFile(Path(config.paths.amos_dirpath) / filename) as zf:
+        with zipfile.ZipFile(Path(config.paths.amos_src_dirpath) / filename) as zf:
             for name in zf.namelist():
                 if not name.endswith('.nii.gz'):
                     continue
@@ -55,21 +54,21 @@ def get_ids(config: DictConfig):
 
     ct_unlabeled_train_ids = [i for i in ct_unlabeled_train_ids if i not in DROP_IDS]
 
-    return ct_labeled_train_ids, ct_unlabeled_train_ids, ct_val_ids, ct_test_ids
+    return ct_labeled_train_ids, ct_val_ids, ct_test_ids, ct_unlabeled_train_ids
 
 
-def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'unlabeled_train', 'val']) -> None:
+def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'val', 'unlabeled_train']) -> None:
     match subset:
         case 'labeled_train':
             zip_filename = 'amos22.zip'
             image_filepath = f'amos22/imagesTr/amos_{i}.nii.gz'
             mask_filepath = f'amos22/labelsTr/amos_{i}.nii.gz'
-            save_dirpath = Path(config.paths.prep_amos_ct_labeled_train_dirpath) / i
+            save_dirpath = Path(config.paths.amos_ct_labeled_train_dirpath) / i
         case 'val':
             zip_filename = 'amos22.zip'
             image_filepath = f'amos22/imagesVa/amos_{i}.nii.gz'
             mask_filepath = f'amos22/labelsVa/amos_{i}.nii.gz'
-            save_dirpath = Path(config.paths.prep_amos_ct_val_dirpath) / i
+            save_dirpath = Path(config.paths.amos_ct_val_dirpath) / i
         case 'unlabeled_train':
             if 5000 <= int(i) < 5400:
                 zip_filename = 'amos22_unlabeled_ct_5000_5399.zip'
@@ -83,24 +82,25 @@ def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'unl
             else:
                 zip_filename = 'amos22_unlabeled_ct_6200_6899.zip'
                 image_filepath = f'amos22_unlabeled_6200_6899/amos_{i}.nii.gz'
-            save_dirpath = Path(config.paths.prep_amos_ct_unlabeled_train_dirpath) / i
+            mask_filepath = None
+            save_dirpath = Path(config.paths.amos_ct_unlabeled_train_dirpath) / i
 
     # read image and affine
-    with zipfile.Path(Path(config.paths.amos_dirpath) / zip_filename, image_filepath).open('rb') as gz_file:
+    with zipfile.Path(Path(config.paths.amos_src_dirpath) / zip_filename, image_filepath).open('rb') as gz_file:
         with gzip.GzipFile(fileobj=gz_file) as nii_file:
             fh = nibabel.FileHolder(fileobj=nii_file)
-            nii = nibabel.Nifti1Image.from_file_map({'header': fh, 'image': fh})
-            image = np.asarray(nii.dataobj)
-            affine = nii.affine
+            image_nii = nibabel.Nifti1Image.from_file_map({'header': fh, 'image': fh})
+            image = image_nii.get_fdata()
+            affine = image_nii.affine
 
     # read mask
-    if subset in ['labeled_train', 'val']:
-        with zipfile.Path(Path(config.paths.amos_dirpath) / zip_filename, mask_filepath).open('rb') as gz_file:
+    if mask_filepath is not None:
+        with zipfile.Path(Path(config.paths.amos_src_dirpath) / zip_filename, mask_filepath).open('rb') as gz_file:
             with gzip.GzipFile(fileobj=gz_file) as nii_file:
                 fh = nibabel.FileHolder(fileobj=nii_file)
-                nii = nibabel.Nifti1Image.from_file_map({'header': fh, 'image': fh})
-                mask = np.asarray(nii.dataobj).astype('uint8')
-                mask_affine = nii.affine
+                mask_nii = nibabel.Nifti1Image.from_file_map({'header': fh, 'image': fh})
+                mask = mask_nii.get_fdata().astype('uint8')
+                mask_affine = mask_nii.affine
     else:
         mask = None
 
@@ -136,7 +136,7 @@ def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'unl
 @hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
 def main(config: DictConfig):
     # parse ids from the archive files
-    ct_labeled_train_ids, ct_unlabeled_train_ids, ct_val_ids, ct_test_ids = get_ids(config)
+    ct_labeled_train_ids, ct_val_ids, ct_test_ids, ct_unlabeled_train_ids = get_ids(config)
 
     desc = 'Preparing AMOS CT labeled train subset'
     ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(ct_labeled_train_ids), desc=desc)(

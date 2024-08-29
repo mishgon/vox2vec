@@ -1,22 +1,22 @@
 # paths to the downloaded data
-nlst_dirpath: /home/jovyan/misha/data/nlst
-amos_dirpath: /home/jovyan/misha/data/amos
-abdomen_atlas_dirpath: /home/jovyan/misha/data/abdomen_atlas
-flare23_dirpath: /home/jovyan/misha/data/flare23
-lidc_dirpath: /home/jovyan/misha/data/lidc
-midrc_ricord_1a_dirpath: /home/jovyan/misha/data/midrc_ricord_1a
+nlst_src_dirpath: /home/jovyan/misha/data/nlst
+amos_src_dirpath: /home/jovyan/misha/data/amos
+abdomen_atlas_src_dirpath: /home/jovyan/misha/data/abdomen_atlas_1.0_mini
+flare23_src_dirpath: /home/jovyan/misha/data/flare23
+lidc_src_dirpath: /home/jovyan/misha/data/lidc
+midrc_ricord_1a_src_dirpath: /home/jovyan/misha/data/midrc_ricord_1a
 
 # paths to the preprocessed data
-prep_nlst_dirpath: /home/jovyan/misha/prep_data/nlst
-prep_amos_ct_labeled_train_dirpath: /home/jovyan/misha/prep_data/amos_ct_labeled_train
-prep_amos_ct_unlabeled_train_dirpath: /home/jovyan/misha/prep_data/amos_ct_unlabeled_train
-prep_amos_ct_val_dirpath: /home/jovyan/misha/prep_data/amos_ct_val
-prep_abdomen_atlas_dirpath: /home/jovyan/misha/prep_data/abdomen_atlas
-prep_flare23_labeled_train_dirpath: /home/jovyan/misha/prep_data/flare23_labeled_train
-prep_flare23_unlabeled_train_dirpath: /home/jovyan/misha/prep_data/flare23_unlabeled_train
-prep_flare23_labeled_val_dirpath: /home/jovyan/misha/prep_data/flare23_labeled_val
-prep_lidc_dirpath: /home/jovyan/misha/prep_data/lidc
-prep_midrc_ricord_1a_dirpath: /home/jovyan/misha/prep_data/midrc_ricord_1a
+nlst_dirpath: /home/jovyan/misha/prep_data/nlst
+amos_ct_labeled_train_dirpath: /home/jovyan/misha/prep_data/amos_ct_labeled_train
+amos_ct_unlabeled_train_dirpath: /home/jovyan/misha/prep_data/amos_ct_unlabeled_train
+amos_ct_val_dirpath: /home/jovyan/misha/prep_data/amos_ct_val
+abdomen_atlas_dirpath: /home/jovyan/misha/prep_data/abdomen_atlas_1.0_mini
+flare23_labeled_train_dirpath: /home/jovyan/misha/prep_data/flare23_labeled_train
+flare23_unlabeled_train_dirpath: /home/jovyan/misha/prep_data/flare23_unlabeled_train
+flare23_labeled_val_dirpath: /home/jovyan/misha/prep_data/flare23_labeled_val
+lidc_dirpath: /home/jovyan/misha/prep_data/lidc
+midrc_ricord_1a_dirpath: /home/jovyan/misha/prep_data/midrc_ricord_1a
 
 # under this path all experiments' logs are saved
 logs_dirpath: /home/jovyan/misha/experiments/vox2vec_public
