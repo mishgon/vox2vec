@@ -153,7 +153,7 @@ def main(config: DictConfig):
     )
 
     desc = 'Preparing AMOS CT unlabeled train subset'
-    ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(ct_unlabeled_train_ids, desc=desc))(
+    ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(ct_unlabeled_train_ids), desc=desc)(
         (prepare_id, [i, config, 'unlabeled_train'], {}) for i in ct_unlabeled_train_ids
     )
 
