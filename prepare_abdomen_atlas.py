@@ -35,6 +35,10 @@ def prepare_id(i: str, config: DictConfig) -> None:
     image, voxel_spacing = to_canonical_orientation(image, voxel_spacing, affine)
     mask, _ = to_canonical_orientation(mask, None, mask_affine)
 
+    # drop series with too large voxel spacing
+    if any(voxel_spacing[i] > config.max_voxel_spacing[i] for i in range(3)):
+        return
+
     # preprocess
     data = Data(image, voxel_spacing, mask)
     data = preprocess(data, config.preprocessing)

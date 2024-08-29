@@ -61,6 +61,10 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
     # to canonical orientation
     image, voxel_spacing = to_canonical_orientation(image, voxel_spacing, om)
 
+    # drop series with too large voxel spacing
+    if any(voxel_spacing[i] > config.max_voxel_spacing[i] for i in range(3)):
+        return
+
     # preprocessing
     data = Data(image, voxel_spacing)
     data = preprocess(data, config.preprocessing)

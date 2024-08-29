@@ -1,4 +1,4 @@
-voxel_spacing: [0.75, 0.75, 2.0]
+voxel_spacing: [1.0, 1.0, 2.0]
 hu_pivots: [-1000.0, -200.0, 200.0, 1500.0]
 rescaled_pivots: [0.0, 0.33, 0.67, 1.0]
 clahe: true  # whether to apply Contrast Limited Adaptive Histogram Equalization (CLAHE) to the images 

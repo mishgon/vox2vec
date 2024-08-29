@@ -60,6 +60,13 @@ def main(config: DictConfig):
         except (AttributeError, ValueError, NotImplementedError) as e:
             warnings.warn(f'Series {series_uid} fails with {e.__class__.__name__}: {str(e)}')
             continue
+        
+        # to canonical orientation
+        image, voxel_spacing = to_canonical_orientation(image, voxel_spacing, om)
+
+        # drop series with too large voxel spacing
+        if any(voxel_spacing[i] > config.max_voxel_spacing[i] for i in range(3)):
+            continue
 
         # create multiclass mask from annotations
         mask = np.zeros(image.shape, dtype='uint8')
@@ -73,7 +80,6 @@ def main(config: DictConfig):
                 mask[(*polygon(vertices[:, 1], vertices[:, 0], image.shape[:2]), slice_index)] = LABELS.index(label) + 1
 
         # to canonical orientation
-        image, voxel_spacing = to_canonical_orientation(image, voxel_spacing, om)
         mask, _ = to_canonical_orientation(mask, None, om)
 
         # preprocessing

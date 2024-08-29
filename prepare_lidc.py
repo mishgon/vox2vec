@@ -42,6 +42,13 @@ def prepare_scan(scan: pl.Scan, config: DictConfig):
         warnings.warn(f'Series {series_uid} fails with {e.__class__.__name__}: {str(e)}')
         return
 
+    # to canonical orientation
+    image, voxel_spacing = to_canonical_orientation(image, voxel_spacing, om)
+
+    # drop series with too large voxel spacing
+    if any(voxel_spacing[i] > config.max_voxel_spacing[i] for i in range(3)):
+        return
+
     # create mask using pylidc
     mask = np.zeros(image.shape, dtype=bool)
     for anns in scan.cluster_annotations():
@@ -49,9 +56,7 @@ def prepare_scan(scan: pl.Scan, config: DictConfig):
         mask[cbbox] = cmask
     # pylidc stacks slices in the other order than us
     mask = np.flip(mask, -1)
-
     # to canonical orientation
-    image, voxel_spacing = to_canonical_orientation(image, voxel_spacing, om)
     mask, _ = to_canonical_orientation(mask, None, om)
 
     # preprocessing

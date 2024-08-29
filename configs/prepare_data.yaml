@@ -6,7 +6,8 @@ defaults:
 
 
 # filtering params
-min_series_length: 96
-min_image_size: [256, 256, 96]
+min_series_length: 112
+max_voxel_spacing: [1.0, 1.0, 2.5]
+min_image_size: [224, 224, 112]
 
-num_workers: 32
+num_workers: 16

@@ -75,6 +75,10 @@ def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'unl
     if mask is not None:
         mask, _ = to_canonical_orientation(mask, None, mask_affine)
 
+    # drop series with too large voxel spacing
+    if any(voxel_spacing[i] > config.max_voxel_spacing[i] for i in range(3)):
+        return
+
     # preprocess
     data = Data(image, voxel_spacing, mask)
     data = preprocess(data, config.preprocessing)
