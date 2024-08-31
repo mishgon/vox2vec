@@ -41,10 +41,10 @@ def preprocess(
     # zoom to config.voxel_spacing
     image = image.astype('float32')
     scale_factor = tuple(voxel_spacing[i] / config.voxel_spacing[i] for i in range(3))
-    image = zoom(image, scale_factor, fill_value=np.min, num_threads=-1, backend='Scipy')
+    image = zoom(image, scale_factor, fill_value=np.min, backend='Scipy')
     voxel_spacing = tuple(config.voxel_spacing)
     if mask is not None:
-        mask = zoom(mask, scale_factor, order=0, fill_value=0, num_threads=-1, backend='Scipy')
+        mask = zoom(mask, scale_factor, order=0, fill_value=0, backend='Scipy')
 
     # zoom may pad image with zeros
     box = mask_to_bbox(image > image.min())

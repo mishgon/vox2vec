@@ -110,13 +110,13 @@ def main(config: DictConfig):
     )
 
     desc = 'Preparing FLARE23 unlabeled train subset'
-    ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(unlabeled_train_ids, desc=desc))(
+    ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(unlabeled_train_ids), desc=desc)(
         (prepare_id, [i, config, 'unlabeled_train'], {}) for i in unlabeled_train_ids
     )
 
     desc = 'Preparing FLARE23 labeled val subset'
     ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(labeled_val_ids), desc=desc)(
-        (prepare_id, [i, config, 'val'], {}) for i in labeled_val_ids
+        (prepare_id, [i, config, 'labeled_val'], {}) for i in labeled_val_ids
     )
 
 
