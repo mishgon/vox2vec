@@ -17,6 +17,9 @@ from vox2vec.utils.misc import ProgressParallel
 from vox2vec.utils.io import save_numpy, save_json
 
 
+MIN_ANNOTATIONS_PER_NODULE = 3
+
+
 def prepare_scan(scan: pl.Scan, config: DictConfig):
     # read series
     series = scan.load_all_dicom_images(verbose=False)
@@ -52,8 +55,9 @@ def prepare_scan(scan: pl.Scan, config: DictConfig):
     # create mask using pylidc
     mask = np.zeros(image.shape, dtype=bool)
     for anns in scan.cluster_annotations():
-        cmask, cbbox, _ = consensus(anns)
-        mask[cbbox] = cmask
+        if len(anns) >= MIN_ANNOTATIONS_PER_NODULE:
+            cmask, cbbox, _ = consensus(anns)
+            mask[cbbox] = cmask
     # pylidc stacks slices in the other order than us
     mask = np.flip(mask, -1)
     # to canonical orientation

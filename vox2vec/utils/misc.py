@@ -1,5 +1,6 @@
-from typing import Callable, Sequence, Union, Any
-import itertools
+from typing import Callable, Sequence, Union, Any, Tuple, List
+
+import random
 from joblib import Parallel, delayed, parallel_backend
 from tqdm.auto import tqdm
 
@@ -48,26 +49,6 @@ def apply_along_axis(
     return np.moveaxis(y.reshape(*x.shape), last, axis)
 
 
-def mask_to_bbox(mask: np.ndarray) -> np.ndarray:
-    """
-    Find the smallest box that contains all true values of the ``mask``.
-    """
-    if not mask.any():
-        raise ValueError('The mask is empty.')
-
-    start, stop = [], []
-    for ax in itertools.combinations(range(mask.ndim), mask.ndim - 1):
-        nonzero = np.any(mask, axis=ax)
-        if np.any(nonzero):
-            left, right = np.where(nonzero)[0][[0, -1]]
-        else:
-            left, right = 0, 0
-        start.insert(0, left)
-        stop.insert(0, right + 1)
-
-    return np.array([start, stop])
-
-
 class ProgressParallel(Parallel):
     def __init__(self, *args, total=None, desc=None, **kwargs):
         self._total = total
@@ -83,3 +64,14 @@ class ProgressParallel(Parallel):
             self._pbar.total = self.n_dispatched_tasks
         self._pbar.n = self.n_completed_tasks
         self._pbar.refresh()
+
+
+def get_random_sample(population: Sequence[Any], size: Union[float, int]) -> List[Any]:
+    if isinstance(size, float):
+        assert 0.0 <= size <= 1.0
+        return random.sample(population, int(len(population) * size))
+    elif isinstance(size, int):
+        assert 0 <= size <= len(population)
+        return random.sample(population, size)
+    else:
+        raise TypeError(type(size))

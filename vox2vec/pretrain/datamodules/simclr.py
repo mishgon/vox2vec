@@ -1,0 +1,229 @@
+from dataclasses import dataclass
+from typing import Tuple, Optional, Union
+from pathlib import Path
+import random
+import numpy as np
+from imops import crop_to_box, zoom
+
+import torch
+from torch.utils.data import Dataset, DataLoader
+import lightning.pytorch as pl
+
+from vox2vec.utils.io import load_numpy, load_json
+from vox2vec.utils.misc import get_random_sample
+from vox2vec.utils.box import get_random_box, get_overlap_box
+from .augmentations import ColorAugmentationsConfig, augment_color
+
+
+@dataclass
+class SimCLRDataPaths:
+    nlst_dirpath: str
+    amos_ct_labeled_train_dirpath: str
+    amos_ct_unlabeled_train_dirpath: str
+    abdomen_atlas_dirpath: str
+    flare23_labeled_train_dirpath: str
+    flare23_unlabeled_train_dirpath: str
+
+
+@dataclass
+class SimCLRDatasetConfig:
+    nlst_size: Union[float, int] = 1.0
+    amos_ct_labeled_train_size: Union[float, int] = 1.0
+    amos_ct_unlabeled_train_size: Union[float, int] = 1.0
+    abdomen_atlas_size: Union[float, int] = 1.0
+    flare23_labeled_train_size: Union[float, int] = 1.0
+    flare23_unlabeled_train_size: Union[float, int] = 1.0
+
+
+@dataclass
+class SimCLRSpatialAugmentationsConfig:
+    context_min_voxel_spacing: Tuple[float, float, float] = (1.0, 1.0, 2.0)
+    context_max_voxel_spacing: Tuple[float, float, float] = (2.0, 2.0, 4.0)
+    crop_size: Tuple[int, int, int] = (128, 128, 64)
+
+
+class SimCLRDataModule(pl.LightningDataModule):
+    def __init__(
+            self,
+            data_paths: SimCLRDataPaths,
+            dataset_config: SimCLRDatasetConfig = SimCLRDatasetConfig(),
+            spatial_augmentations_config: SimCLRSpatialAugmentationsConfig = SimCLRSpatialAugmentationsConfig(),
+            color_augmentations_config: ColorAugmentationsConfig = ColorAugmentationsConfig(),
+            num_voxels_per_crop: int = 512,
+            batch_size: int = 8,  # images per batch
+            num_batches_per_epoch: int = 3000,
+            num_workers: int = 0,
+            prefetch_factor: Optional[int] = None,
+            random_seed: int = 42,
+    ) -> None:
+        super().__init__()
+
+        self.data_paths = data_paths
+        self.dataset_config = dataset_config
+        self.spatial_augmentations_config = spatial_augmentations_config
+        self.color_augmentations_config = color_augmentations_config
+        self.num_voxels_per_crop = num_voxels_per_crop
+        self.batch_size = batch_size
+        self.num_batches_per_epoch = num_batches_per_epoch
+        self.num_workers = num_workers
+        self.prefetch_factor = prefetch_factor
+        self.random_seed = random_seed
+
+    def prepare_data(self) -> None:
+        pass
+
+    def setup(self, stage: str = 'fit') -> None:
+        num_images_per_epoch = self.batch_size * self.num_batches_per_epoch
+        self.train_dataset = _SimCLRDataset(
+            data_paths=self.data_paths,
+            dataset_config=self.dataset_config,
+            spatial_augmentations_config=self.spatial_augmentations_config,
+            color_augmentations_config=self.color_augmentations_config,
+            num_voxels_per_crop=self.num_voxels_per_crop,
+            num_images_per_epoch=num_images_per_epoch,
+            random_seed=self.random_seed
+        )
+
+    def train_dataloader(self):
+        return DataLoader(
+            dataset=self.train_dataset,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            collate_fn=self._collate_fn,
+            prefetch_factor=self.prefetch_factor
+        )
+
+    def _collate_fn(self, batch):
+        (images_1, voxel_indices_1, images_2, voxel_indices_2) = zip(*batch)
+        return (
+            torch.from_numpy(np.stack(images_1)),
+            [torch.from_numpy(indices) for indices in voxel_indices_1],
+            torch.from_numpy(np.stack(images_2)),
+            [torch.from_numpy(indices) for indices in voxel_indices_2],
+        )
+
+
+class _SimCLRDataset(Dataset):
+    def __init__(
+            self,
+            data_paths: SimCLRDataPaths,
+            dataset_config: SimCLRDatasetConfig,
+            spatial_augmentations_config: SimCLRSpatialAugmentationsConfig,
+            color_augmentations_config: ColorAugmentationsConfig,
+            num_voxels_per_crop: int,
+            num_images_per_epoch: int,
+            random_seed: int
+    ) -> None:
+        super().__init__()
+
+        self.spatial_augmentations_config = spatial_augmentations_config
+        self.color_augmentations_config = color_augmentations_config
+        self.num_voxels_per_crop = num_voxels_per_crop
+        self.num_images_per_epoch = num_images_per_epoch
+
+        random.seed(random_seed)
+
+        self.image_dirpaths = (
+            get_random_sample(population=list(Path(data_paths.nlst_dirpath).iterdir()),
+                              size=dataset_config.nlst_size)
+            + get_random_sample(population=list(Path(data_paths.amos_ct_labeled_train_dirpath).iterdir()),
+                                size=dataset_config.amos_ct_labeled_train_size)
+            + get_random_sample(population=list(Path(data_paths.amos_ct_unlabeled_train_dirpath).iterdir()),
+                                size=dataset_config.amos_ct_unlabeled_train_size)
+            + get_random_sample(population=list(Path(data_paths.abdomen_atlas_dirpath).iterdir()),
+                                size=dataset_config.abdomen_atlas_size)
+            + get_random_sample(population=list(Path(data_paths.flare23_labeled_train_dirpath).iterdir()),
+                                size=dataset_config.flare23_labeled_train_size)
+            + get_random_sample(population=list(Path(data_paths.flare23_unlabeled_train_dirpath).iterdir()),
+                                size=dataset_config.flare23_unlabeled_train_size)
+        )
+
+    def __len__(self):
+        return self.num_images_per_epoch
+
+    def __getitem__(self, index: int):
+        image_dirpath = random.choice(self.image_dirpaths)
+        image = load_numpy(image_dirpath / 'image.npy.gz', decompress=True).astype('float32')
+        voxel_spacing = load_json(image_dirpath / 'voxel_spacing.json')
+        body_mask = load_numpy(image_dirpath / 'body_mask.npy.gz', decompress=True)
+
+        return _get_augmented_crops(
+            image=image,
+            voxel_spacing=voxel_spacing,
+            body_mask=body_mask,
+            spatial_augmentations_config=self.spatial_augmentations_config,
+            color_augmentations_config=self.color_augmentations_config,
+            num_voxels_per_crop=self.num_voxels_per_crop,
+        )
+
+
+def _get_augmented_crops(
+        image: np.ndarray,
+        voxel_spacing: Tuple[float, float, float],
+        body_mask: np.ndarray,
+        spatial_augmentations_config: SimCLRSpatialAugmentationsConfig,
+        color_augmentations_config: ColorAugmentationsConfig,
+        num_voxels_per_crop: int,
+) -> Tuple:
+    image_size = np.array(image.shape, dtype='int64')
+    crop_size = np.array(spatial_augmentations_config.crop_size, dtype='int64')
+    min_voxel_spacing = np.array(spatial_augmentations_config.context_min_voxel_spacing, dtype='float32')
+    max_voxel_spacing = np.array(spatial_augmentations_config.context_max_voxel_spacing, dtype='float32')
+    max_voxel_spacing = np.minimum(max_voxel_spacing, voxel_spacing * image_size / crop_size)
+
+    voxel_spacing_1 = np.random.uniform(min_voxel_spacing, max_voxel_spacing)
+    voxel_spacing_2 = np.random.uniform(min_voxel_spacing, max_voxel_spacing)
+
+    crop_size_before_resize_1 = np.int64(np.round(crop_size * voxel_spacing_1 / voxel_spacing))
+    crop_size_before_resize_2 = np.int64(np.round(crop_size * voxel_spacing_2 / voxel_spacing))
+
+    resize_factor_1 = crop_size / crop_size_before_resize_1
+    resize_factor_2 = crop_size / crop_size_before_resize_2
+
+    voxel_index = np.random.randint(0, image_size, size=(1, 3))
+    crop_box_1 = get_random_box(image_size, crop_size_before_resize_1, voxel_index)
+    crop_box_2 = get_random_box(image_size, crop_size_before_resize_2, voxel_index)
+    overlap_box = get_overlap_box(crop_box_1, crop_box_2)
+    voxel_indices = overlap_box[0] + np.argwhere(crop_to_box(body_mask, overlap_box))
+    if len(voxel_indices) > num_voxels_per_crop:
+        voxel_indices = voxel_indices[np.random.choice(len(voxel_indices), num_voxels_per_crop, replace=False)]
+
+    image_1, voxel_indices_1 = _get_augmented_crop(image, voxel_spacing, voxel_indices,
+                                                   crop_box_1, resize_factor_1, color_augmentations_config)
+    image_2, voxel_indices_2 = _get_augmented_crop(image, voxel_spacing, voxel_indices,
+                                                   crop_box_2, resize_factor_2, color_augmentations_config)
+    return image_1, voxel_indices_1, image_2, voxel_indices_2
+
+
+def _get_augmented_crop(
+        image: np.ndarray,
+        voxel_spacing: np.ndarray,
+        voxel_indices: np.ndarray,
+        crop_box: np.ndarray,
+        resize_factor: np.ndarray,
+        color_augmentations_config: ColorAugmentationsConfig
+) -> Tuple:
+    image = crop_to_box(image, crop_box)
+    voxel_indices = voxel_indices - crop_box[0]
+
+    image = zoom(np.ascontiguousarray(image), resize_factor, backend='Scipy')
+    voxel_indices = np.int64(np.floor(voxel_indices * resize_factor))
+    voxel_spacing = voxel_spacing / resize_factor
+
+    # flips
+    # for p, axis in zip(spatial_augmentations_config.context_flips_p, [-3, -2, -1], strict=True):
+    #     if random.uniform(0, 1) < p:
+    #         context_image = np.flip(context_image, axis)
+    #         context_voxel_indices[:, axis] = context_image.shape[axis] - 1 - context_voxel_indices[:, axis]
+
+    # fix numpy meta after flips/rots
+    # context_image = context_image.copy()
+
+    # augment colors
+    image = augment_color(image, voxel_spacing, color_augmentations_config)
+
+    # add channel dim
+    image = np.expand_dims(image, axis=0)
+
+    return image, voxel_indices

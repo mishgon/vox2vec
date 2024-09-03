@@ -1,0 +1,15 @@
+_target_: lightning.pytorch.trainer.Trainer
+logger:
+  _target_: lightning.pytorch.loggers.TensorBoardLogger
+  save_dir: ${paths.output_dir}
+  name: null
+  version: ""
+  log_graph: False
+profiler:
+  _target_: lightning.pytorch.profilers.SimpleProfiler
+  dirpath: ${paths.output_dir}
+  filename: profile
+accelerator: gpu
+precision: 16-mixed
+max_steps: 300_000
+gradient_clip_val: 1.0

@@ -6,7 +6,7 @@ from skimage.measure import block_reduce
 from skimage.exposure import equalize_adapthist
 from imops import crop_to_box, pad, zoom
 
-from vox2vec.utils.misc import mask_to_bbox
+from vox2vec.utils.box import mask_to_bbox
 
 
 @dataclass
