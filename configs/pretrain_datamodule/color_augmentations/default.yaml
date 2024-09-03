@@ -1,0 +1,13 @@
+blur_or_sharpen_p: 0.8
+blur_sigma_range: [0.0, 1.5]
+sharpen_sigma_range: [0.0, 1.5]
+sharpen_alpha_range: [0.0, 2.0]
+noise_p: 0.8
+noise_sigma_range: [0.0, 0.1]
+invert_p: 0.0
+brightness_p: 0.8
+brightness_range: [0.8, 1.2]
+contrast_p: 0.8
+contrast_range: [0.8, 1.2]
+gamma_p: 0.8
+gamma_range: [0.8, 1.25]

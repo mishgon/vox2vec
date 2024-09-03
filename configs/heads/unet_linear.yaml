@@ -1,0 +1,5 @@
+linear:
+  _target_: vox2vec.nn.unet_3d.UNetLinearDenseHead3d
+  num_classes: ???
+  unet_stem_stride: ${backbone.stem_stride}
+  unet_out_channels: ${backbone.out_channels}

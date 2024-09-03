@@ -1,0 +1,6 @@
+nonlinear:
+  _target_: vox2vec.nn.unet_3d.UNetDenseHead3d
+  num_classes: ???
+  unet_stem_stride: ${backbone.stem_stride}
+  unet_out_channels: ${backbone.out_channels}
+  hidden_channels: 128

@@ -8,7 +8,7 @@ from vox2vec.utils.misc import normalize_axis_list
 
 
 @dataclass
-class ColorAugmentationsConfig:
+class ColorAugmentations:
     blur_or_sharpen_p: float = 0.8
     blur_sigma_range: Tuple[float, float] = (0.0, 1.5)
     sharpen_sigma_range: Tuple[float, float] = (0.0, 1.5)
@@ -27,41 +27,41 @@ class ColorAugmentationsConfig:
 def augment_color(
         image: np.ndarray,
         voxel_spacing: np.ndarray,
-        color_augmentations_config: ColorAugmentationsConfig
+        color_augmentations: ColorAugmentations
 ) -> np.ndarray:
-    if random.uniform(0, 1) < color_augmentations_config.blur_or_sharpen_p:
+    if random.uniform(0, 1) < color_augmentations.blur_or_sharpen_p:
         if random.uniform(0, 1) < 0.5:
             # random gaussian blur in axial plane
-            sigma = random.uniform(*color_augmentations_config.blur_sigma_range) / voxel_spacing[:2]
+            sigma = random.uniform(*color_augmentations.blur_sigma_range) / voxel_spacing[:2]
             image = gaussian_filter(image, sigma, axis=(0, 1))
         else:
-            sigma = random.uniform(*color_augmentations_config.sharpen_sigma_range) / voxel_spacing[:2]
-            alpha = random.uniform(*color_augmentations_config.sharpen_alpha_range)
+            sigma = random.uniform(*color_augmentations.sharpen_sigma_range) / voxel_spacing[:2]
+            alpha = random.uniform(*color_augmentations.sharpen_alpha_range)
             image = gaussian_sharpen(image, sigma, alpha, axis=(0, 1))
 
-    if random.uniform(0, 1) < color_augmentations_config.noise_p:
+    if random.uniform(0, 1) < color_augmentations.noise_p:
         # gaussian noise
-        noise_sigma = random.uniform(*color_augmentations_config.noise_sigma_range)
+        noise_sigma = random.uniform(*color_augmentations.noise_sigma_range)
         image = image + np.random.normal(0, noise_sigma, size=image.shape).astype('float32')
 
-    if random.uniform(0, 1) < color_augmentations_config.invert_p:
+    if random.uniform(0, 1) < color_augmentations.invert_p:
         # invert
         image = 1.0 - image
 
-    if random.uniform(0, 1) < color_augmentations_config.brightness_p:
+    if random.uniform(0, 1) < color_augmentations.brightness_p:
         # adjust brightness
-        brightness_factor = random.uniform(*color_augmentations_config.brightness_range)
+        brightness_factor = random.uniform(*color_augmentations.brightness_range)
         image = np.clip(image * brightness_factor, 0.0, 1.0)
 
-    if random.uniform(0, 1) < color_augmentations_config.contrast_p:
+    if random.uniform(0, 1) < color_augmentations.contrast_p:
         # adjust contrast
-        contrast_factor = random.uniform(*color_augmentations_config.contrast_range)
+        contrast_factor = random.uniform(*color_augmentations.contrast_range)
         mean = image.mean()
         image = np.clip((image - mean) * contrast_factor + mean, 0.0, 1.0)
 
-    if random.uniform(0, 1) < color_augmentations_config.gamma_p:
+    if random.uniform(0, 1) < color_augmentations.gamma_p:
         image = np.clip(image, 0.0, 1.0)
-        gamma = random.uniform(*color_augmentations_config.gamma_range)
+        gamma = random.uniform(*color_augmentations.gamma_range)
         image = np.power(image, gamma)
 
     return image

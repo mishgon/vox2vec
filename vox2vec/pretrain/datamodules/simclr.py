@@ -12,7 +12,7 @@ import lightning.pytorch as pl
 from vox2vec.utils.io import load_numpy, load_json
 from vox2vec.utils.misc import get_random_sample
 from vox2vec.utils.box import get_random_box, get_overlap_box
-from .augmentations import ColorAugmentationsConfig, augment_color
+from .augmentations import ColorAugmentations, augment_color
 
 
 @dataclass
@@ -26,19 +26,19 @@ class SimCLRDataPaths:
 
 
 @dataclass
-class SimCLRDatasetConfig:
-    nlst_size: Union[float, int] = 1.0
-    amos_ct_labeled_train_size: Union[float, int] = 1.0
-    amos_ct_unlabeled_train_size: Union[float, int] = 1.0
-    abdomen_atlas_size: Union[float, int] = 1.0
-    flare23_labeled_train_size: Union[float, int] = 1.0
-    flare23_unlabeled_train_size: Union[float, int] = 1.0
+class SimCLRDatasets:
+    nlst: Union[float, int] = 1.0
+    amos_ct_labeled_train: Union[float, int] = 1.0
+    amos_ct_unlabeled_train: Union[float, int] = 1.0
+    abdomen_atlas: Union[float, int] = 1.0
+    flare23_labeled_train: Union[float, int] = 1.0
+    flare23_unlabeled_train: Union[float, int] = 1.0
 
 
 @dataclass
-class SimCLRSpatialAugmentationsConfig:
-    context_min_voxel_spacing: Tuple[float, float, float] = (1.0, 1.0, 2.0)
-    context_max_voxel_spacing: Tuple[float, float, float] = (2.0, 2.0, 4.0)
+class SimCLRSpatialAugmentations:
+    min_voxel_spacing: Tuple[float, float, float] = (1.0, 1.0, 2.0)
+    max_voxel_spacing: Tuple[float, float, float] = (2.0, 2.0, 4.0)
     crop_size: Tuple[int, int, int] = (128, 128, 64)
 
 
@@ -46,9 +46,9 @@ class SimCLRDataModule(pl.LightningDataModule):
     def __init__(
             self,
             data_paths: SimCLRDataPaths,
-            dataset_config: SimCLRDatasetConfig = SimCLRDatasetConfig(),
-            spatial_augmentations_config: SimCLRSpatialAugmentationsConfig = SimCLRSpatialAugmentationsConfig(),
-            color_augmentations_config: ColorAugmentationsConfig = ColorAugmentationsConfig(),
+            datasets: SimCLRDatasets = SimCLRDatasets(),
+            spatial_augmentations: SimCLRSpatialAugmentations = SimCLRSpatialAugmentations(),
+            color_augmentations: ColorAugmentations = ColorAugmentations(),
             num_voxels_per_crop: int = 512,
             batch_size: int = 8,  # images per batch
             num_batches_per_epoch: int = 3000,
@@ -59,9 +59,9 @@ class SimCLRDataModule(pl.LightningDataModule):
         super().__init__()
 
         self.data_paths = data_paths
-        self.dataset_config = dataset_config
-        self.spatial_augmentations_config = spatial_augmentations_config
-        self.color_augmentations_config = color_augmentations_config
+        self.datasets = datasets
+        self.spatial_augmentations = spatial_augmentations
+        self.color_augmentations = color_augmentations
         self.num_voxels_per_crop = num_voxels_per_crop
         self.batch_size = batch_size
         self.num_batches_per_epoch = num_batches_per_epoch
@@ -76,9 +76,9 @@ class SimCLRDataModule(pl.LightningDataModule):
         num_images_per_epoch = self.batch_size * self.num_batches_per_epoch
         self.train_dataset = _SimCLRDataset(
             data_paths=self.data_paths,
-            dataset_config=self.dataset_config,
-            spatial_augmentations_config=self.spatial_augmentations_config,
-            color_augmentations_config=self.color_augmentations_config,
+            datasets=self.datasets,
+            spatial_augmentations=self.spatial_augmentations,
+            color_augmentations=self.color_augmentations,
             num_voxels_per_crop=self.num_voxels_per_crop,
             num_images_per_epoch=num_images_per_epoch,
             random_seed=self.random_seed
@@ -108,17 +108,17 @@ class _SimCLRDataset(Dataset):
     def __init__(
             self,
             data_paths: SimCLRDataPaths,
-            dataset_config: SimCLRDatasetConfig,
-            spatial_augmentations_config: SimCLRSpatialAugmentationsConfig,
-            color_augmentations_config: ColorAugmentationsConfig,
+            datasets: SimCLRDatasets,
+            spatial_augmentations: SimCLRSpatialAugmentations,
+            color_augmentations: ColorAugmentations,
             num_voxels_per_crop: int,
             num_images_per_epoch: int,
             random_seed: int
     ) -> None:
         super().__init__()
 
-        self.spatial_augmentations_config = spatial_augmentations_config
-        self.color_augmentations_config = color_augmentations_config
+        self.spatial_augmentations = spatial_augmentations
+        self.color_augmentations = color_augmentations
         self.num_voxels_per_crop = num_voxels_per_crop
         self.num_images_per_epoch = num_images_per_epoch
 
@@ -126,17 +126,17 @@ class _SimCLRDataset(Dataset):
 
         self.image_dirpaths = (
             get_random_sample(population=list(Path(data_paths.nlst_dirpath).iterdir()),
-                              size=dataset_config.nlst_size)
+                              size=datasets.nlst)
             + get_random_sample(population=list(Path(data_paths.amos_ct_labeled_train_dirpath).iterdir()),
-                                size=dataset_config.amos_ct_labeled_train_size)
+                                size=datasets.amos_ct_labeled_train)
             + get_random_sample(population=list(Path(data_paths.amos_ct_unlabeled_train_dirpath).iterdir()),
-                                size=dataset_config.amos_ct_unlabeled_train_size)
+                                size=datasets.amos_ct_unlabeled_train)
             + get_random_sample(population=list(Path(data_paths.abdomen_atlas_dirpath).iterdir()),
-                                size=dataset_config.abdomen_atlas_size)
+                                size=datasets.abdomen_atlas)
             + get_random_sample(population=list(Path(data_paths.flare23_labeled_train_dirpath).iterdir()),
-                                size=dataset_config.flare23_labeled_train_size)
+                                size=datasets.flare23_labeled_train)
             + get_random_sample(population=list(Path(data_paths.flare23_unlabeled_train_dirpath).iterdir()),
-                                size=dataset_config.flare23_unlabeled_train_size)
+                                size=datasets.flare23_unlabeled_train)
         )
 
     def __len__(self):
@@ -152,8 +152,8 @@ class _SimCLRDataset(Dataset):
             image=image,
             voxel_spacing=voxel_spacing,
             body_mask=body_mask,
-            spatial_augmentations_config=self.spatial_augmentations_config,
-            color_augmentations_config=self.color_augmentations_config,
+            spatial_augmentations=self.spatial_augmentations,
+            color_augmentations=self.color_augmentations,
             num_voxels_per_crop=self.num_voxels_per_crop,
         )
 
@@ -162,14 +162,14 @@ def _get_augmented_crops(
         image: np.ndarray,
         voxel_spacing: Tuple[float, float, float],
         body_mask: np.ndarray,
-        spatial_augmentations_config: SimCLRSpatialAugmentationsConfig,
-        color_augmentations_config: ColorAugmentationsConfig,
+        spatial_augmentations: SimCLRSpatialAugmentations,
+        color_augmentations: ColorAugmentations,
         num_voxels_per_crop: int,
 ) -> Tuple:
     image_size = np.array(image.shape, dtype='int64')
-    crop_size = np.array(spatial_augmentations_config.crop_size, dtype='int64')
-    min_voxel_spacing = np.array(spatial_augmentations_config.context_min_voxel_spacing, dtype='float32')
-    max_voxel_spacing = np.array(spatial_augmentations_config.context_max_voxel_spacing, dtype='float32')
+    crop_size = np.array(spatial_augmentations.crop_size, dtype='int64')
+    min_voxel_spacing = np.array(spatial_augmentations.min_voxel_spacing, dtype='float32')
+    max_voxel_spacing = np.array(spatial_augmentations.max_voxel_spacing, dtype='float32')
     max_voxel_spacing = np.minimum(max_voxel_spacing, voxel_spacing * image_size / crop_size)
 
     voxel_spacing_1 = np.random.uniform(min_voxel_spacing, max_voxel_spacing)
@@ -190,9 +190,9 @@ def _get_augmented_crops(
         voxel_indices = voxel_indices[np.random.choice(len(voxel_indices), num_voxels_per_crop, replace=False)]
 
     image_1, voxel_indices_1 = _get_augmented_crop(image, voxel_spacing, voxel_indices,
-                                                   crop_box_1, resize_factor_1, color_augmentations_config)
+                                                   crop_box_1, resize_factor_1, color_augmentations)
     image_2, voxel_indices_2 = _get_augmented_crop(image, voxel_spacing, voxel_indices,
-                                                   crop_box_2, resize_factor_2, color_augmentations_config)
+                                                   crop_box_2, resize_factor_2, color_augmentations)
     return image_1, voxel_indices_1, image_2, voxel_indices_2
 
 
@@ -202,7 +202,7 @@ def _get_augmented_crop(
         voxel_indices: np.ndarray,
         crop_box: np.ndarray,
         resize_factor: np.ndarray,
-        color_augmentations_config: ColorAugmentationsConfig
+        color_augmentations: ColorAugmentations
 ) -> Tuple:
     image = crop_to_box(image, crop_box)
     voxel_indices = voxel_indices - crop_box[0]
@@ -212,7 +212,7 @@ def _get_augmented_crop(
     voxel_spacing = voxel_spacing / resize_factor
 
     # flips
-    # for p, axis in zip(spatial_augmentations_config.context_flips_p, [-3, -2, -1], strict=True):
+    # for p, axis in zip(spatial_augmentations.context_flips_p, [-3, -2, -1], strict=True):
     #     if random.uniform(0, 1) < p:
     #         context_image = np.flip(context_image, axis)
     #         context_voxel_indices[:, axis] = context_image.shape[axis] - 1 - context_voxel_indices[:, axis]
@@ -221,7 +221,7 @@ def _get_augmented_crop(
     # context_image = context_image.copy()
 
     # augment colors
-    image = augment_color(image, voxel_spacing, color_augmentations_config)
+    image = augment_color(image, voxel_spacing, color_augmentations)
 
     # add channel dim
     image = np.expand_dims(image, axis=0)

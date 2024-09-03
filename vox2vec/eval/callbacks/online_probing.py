@@ -12,15 +12,15 @@ from vox2vec.nn.functional import (
 from .visualize import draw
 
 
-class BinaryOnlineProbing(pl.Callback):
+class OnlineProbing(pl.Callback):
     def __init__(
             self,
             *heads: nn.Module,
-            lr: float,
-            weight_decay: float,
-            gradient_clip_val: float,
             crop_size: Tuple[int, int, int],
-            sw_batch_size: int,
+            sw_batch_size: int = 1,
+            lr: float = 3e-4,
+            weight_decay: float = 1e-6,
+            gradient_clip_val: float = 1.0,
             backbone_warmup_epochs: int = 1,
             draw_n_first_val_examples: int = 10
     ):
@@ -60,12 +60,12 @@ class BinaryOnlineProbing(pl.Callback):
             pred_probs = torch.sigmoid(pred_logits)
 
             bce_loss = segmentation_bce_loss(pred_logits, gt_masks, roi_masks)
-            pl_module.log(f'binary_online_probing/head_{i}_bce_loss', bce_loss, on_epoch=True, on_step=True)
+            pl_module.log(f'online_probing/head_{i}_bce_loss', bce_loss, on_epoch=True, on_step=True)
 
             positive = gt_masks.flatten(1, -1).any(1)
             if positive.any():
                 dice_loss = binary_dice_loss(pred_probs[positive], gt_masks[positive], roi_masks[positive])
-                pl_module.log(f'binary_online_probing/head_{i}_dice_loss', bce_loss, on_epoch=True, on_step=True)
+                pl_module.log(f'online_probing/head_{i}_dice_loss', bce_loss, on_epoch=True, on_step=True)
             else:
                 dice_loss = 0.0
 
@@ -101,8 +101,9 @@ class BinaryOnlineProbing(pl.Callback):
 
             dice_scores = binary_soft_dice_score(pred_probs, gt_mask)
             for j in range(len(dice_scores)):
-                pl_module.log(f'val/head_{i}_dice_score_for_cls_{j}', dice_scores[j].item(), on_epoch=True)
-            pl_module.log(f'val/head_{i}_avg_dice_score', dice_scores.mean().item(), on_epoch=True)
+                pl_module.log(f'online_probing/head_{i}_dice_score_for_cls_{j}', dice_scores[j].item(), on_epoch=True)
+            if len(dice_scores) > 1:
+                pl_module.log(f'online_probing/head_{i}_avg_dice_score', dice_scores.mean().item(), on_epoch=True)
 
             if batch_idx < self.draw_n_first_val_examples:
                 log_image = draw(image, gt_mask, pred_mask)

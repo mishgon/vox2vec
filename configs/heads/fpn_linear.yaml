@@ -1,0 +1,5 @@
+linear:
+  _target_: medimm.fpn_3d.FPNLinearDenseHead3d
+  out_channels: ???
+  fpn_stem_stride: ${backbone.stem_stride}
+  fpn_out_channels: ${backbone.out_channels}

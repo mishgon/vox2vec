@@ -26,20 +26,20 @@ class MIMDataPaths:
 
 
 @dataclass
-class MIMDatasetConfig:
-    nlst_size: Union[float, int] = 1.0
-    amos_ct_labeled_train_size: Union[float, int] = 1.0
-    amos_ct_unlabeled_train_size: Union[float, int] = 1.0
-    abdomen_atlas_size: Union[float, int] = 1.0
-    flare23_labeled_train_size: Union[float, int] = 1.0
-    flare23_unlabeled_train_size: Union[float, int] = 1.0
+class MIMDatasets:
+    nlst: Union[float, int] = 1.0
+    amos_ct_labeled_train: Union[float, int] = 1.0
+    amos_ct_unlabeled_train: Union[float, int] = 1.0
+    abdomen_atlas: Union[float, int] = 1.0
+    flare23_labeled_train: Union[float, int] = 1.0
+    flare23_unlabeled_train: Union[float, int] = 1.0
 
 
 class MIMDataModule(pl.LightningDataModule):
     def __init__(
             self,
             data_paths: MIMDataPaths,
-            dataset_config: MIMDatasetConfig = MIMDatasetConfig(),
+            datasets: MIMDatasets = MIMDatasets(),
             target_crop_size: Tuple[int, int, int] = (256, 256, 128),
             context_crop_size: Tuple[int, int, int] = (224, 224, 112),
             token_size_per_scale: Sequence[Tuple[int, int, int]] = ((4, 4, 2), (8, 8, 4), (16, 16, 8), (32, 32, 16)),
@@ -55,7 +55,7 @@ class MIMDataModule(pl.LightningDataModule):
         super().__init__()
 
         self.data_paths = data_paths
-        self.dataset_config = dataset_config
+        self.datasets = datasets
         self.target_crop_size = target_crop_size
         self.context_crop_size = context_crop_size
         self.token_size_per_scale = token_size_per_scale
@@ -75,7 +75,7 @@ class MIMDataModule(pl.LightningDataModule):
         num_images_per_epoch = self.batch_size * self.num_batches_per_epoch
         self.train_dataset = _MIMDataset(
             data_paths=self.data_paths,
-            dataset_config=self.dataset_config,
+            datasets=self.datasets,
             target_crop_size=self.target_crop_size,
             context_crop_size=self.context_crop_size,
             token_size_per_scale=self.token_size_per_scale,
@@ -117,7 +117,7 @@ class _MIMDataset(Dataset):
     def __init__(
             self,
             data_paths: MIMDataPaths,
-            dataset_config: MIMDatasetConfig,
+            datasets: MIMDatasets,
             target_crop_size: Tuple[int, int, int],
             context_crop_size: Tuple[int, int, int],
             token_size_per_scale: Sequence[Tuple[int, int, int]],
@@ -141,17 +141,17 @@ class _MIMDataset(Dataset):
 
         self.image_dirpaths = (
             get_random_sample(population=list(Path(data_paths.nlst_dirpath).iterdir()),
-                              size=dataset_config.nlst_size)
+                              size=datasets.nlst)
             + get_random_sample(population=list(Path(data_paths.amos_ct_labeled_train_dirpath).iterdir()),
-                                size=dataset_config.amos_ct_labeled_train_size)
+                                size=datasets.amos_ct_labeled_train)
             + get_random_sample(population=list(Path(data_paths.amos_ct_unlabeled_train_dirpath).iterdir()),
-                                size=dataset_config.amos_ct_unlabeled_train_size)
+                                size=datasets.amos_ct_unlabeled_train)
             + get_random_sample(population=list(Path(data_paths.abdomen_atlas_dirpath).iterdir()),
-                                size=dataset_config.abdomen_atlas_size)
+                                size=datasets.abdomen_atlas)
             + get_random_sample(population=list(Path(data_paths.flare23_labeled_train_dirpath).iterdir()),
-                                size=dataset_config.flare23_labeled_train_size)
+                                size=datasets.flare23_labeled_train)
             + get_random_sample(population=list(Path(data_paths.flare23_unlabeled_train_dirpath).iterdir()),
-                                size=dataset_config.flare23_unlabeled_train_size)
+                                size=datasets.flare23_unlabeled_train)
         )
 
     def __len__(self):

@@ -1,0 +1,12 @@
+_target_: medimm.fpn_3d.FPN3d
+in_channels: 1
+stem_stride: 1
+out_channels: [32, 64, 128, 256]
+depths: [[1, 1], [2, 1], [4, 1], 8]
+stem_kernel_size: 7
+stem_padding: 3
+drop_path_rate: 0.0
+final_ln: false
+final_affine: false
+final_gelu: false
+mask_token: True

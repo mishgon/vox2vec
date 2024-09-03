@@ -1,0 +1,25 @@
+defaults:
+  - pretrain_datamodule: simclr
+  - backbone: unet
+  - heads/unet_linear
+  - heads/unet_nonlinear
+  - pretrain_model: simclr_unet
+  - paths: default
+  - hydra: default
+  - _self_
+
+
+heads:
+  linear:
+    out_channels: 1
+  nonlinear:
+    out_channels: 1
+
+online_probing:
+  crop_size: [128, 128, 64]
+  batch_size: 8
+  num_workers: 4
+
+ckpt_path: null
+
+logs_group: pretrain/simclr_unet
