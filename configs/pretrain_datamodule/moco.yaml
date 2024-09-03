@@ -13,7 +13,7 @@ masking:
   p: 0.0
   ratio: 0.6
   block_size: [16, 16, 8]
-num_voxels_per_crop: 64
+num_voxels_per_crop: 512
 batch_size: 8
 num_batches_per_epoch: 3000
 num_workers: 8

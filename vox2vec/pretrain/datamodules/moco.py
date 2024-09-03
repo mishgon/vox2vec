@@ -58,7 +58,7 @@ class MoCoDataModule(pl.LightningDataModule):
             spatial_augmentations: MoCoSpatialAugmentations = MoCoSpatialAugmentations(),
             color_augmentations: ColorAugmentations = ColorAugmentations(),
             masking: MoCoMasking = MoCoMasking(),
-            num_voxels_per_crop: int = 64,
+            num_voxels_per_crop: int = 512,
             batch_size: int = 8,  # images per batch
             num_batches_per_epoch: int = 3000,
             num_workers: int = 0,
