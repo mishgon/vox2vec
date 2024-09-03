@@ -25,7 +25,7 @@ class SimCLR(pl.LightningModule):
         super().__init__()
 
         self.backbone = backbone
-        self.proj_head = nn.Sequential(
+        self.projector = nn.Sequential(
             nn.Linear(sum(backbone.out_channels), proj_hidden_dim),
             nn.LayerNorm(proj_hidden_dim),
             nn.GELU(),
@@ -34,6 +34,7 @@ class SimCLR(pl.LightningModule):
             nn.GELU(),
             nn.Linear(proj_hidden_dim, proj_out_dim)
         )
+
         self.temp = temp
         self.lr = lr
         self.weight_decay = weight_decay
@@ -55,7 +56,7 @@ class SimCLR(pl.LightningModule):
             stride=self.backbone.stem_stride,
             mode='trilinear'
         )
-        embeds = F.normalize(self.proj_head(features))
+        embeds = F.normalize(self.projector(features))
         return embeds
 
     def training_step(self, batch, batch_idx):
@@ -84,7 +85,12 @@ class SimCLR(pl.LightningModule):
         pass
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        optimizer = torch.optim.AdamW(
+            params=self.parameters(),
+            lr=self.lr,
+            eps=1e-3,
+            weight_decay=self.weight_decay
+        )
 
         if self.warmup_steps is None:
             return optimizer

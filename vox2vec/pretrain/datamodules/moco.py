@@ -39,8 +39,8 @@ class MoCoDatasets:
 class MoCoSpatialAugmentations:
     context_min_voxel_spacing: Tuple[float, float, float] = (1.0, 1.0, 2.0)
     context_max_voxel_spacing: Tuple[float, float, float] = (2.0, 2.0, 4.0)
-    context_crop_size: Tuple[int, int, int] = (128, 128, 64)
-    target_crop_size: Tuple[int, int, int] = (256, 256, 128)
+    context_crop_size: Tuple[int, int, int] = (64, 64, 32)
+    target_crop_size: Tuple[int, int, int] = (128, 128, 64)
 
 
 @dataclass
@@ -58,7 +58,7 @@ class MoCoDataModule(pl.LightningDataModule):
             spatial_augmentations: MoCoSpatialAugmentations = MoCoSpatialAugmentations(),
             color_augmentations: ColorAugmentations = ColorAugmentations(),
             masking: MoCoMasking = MoCoMasking(),
-            num_voxels_per_crop: int = 512,
+            num_voxels_per_crop: int = 64,
             batch_size: int = 8,  # images per batch
             num_batches_per_epoch: int = 3000,
             num_workers: int = 0,
@@ -102,6 +102,7 @@ class MoCoDataModule(pl.LightningDataModule):
             shuffle=True,
             num_workers=self.num_workers,
             collate_fn=self._collate_fn,
+            pin_memory=True,
             prefetch_factor=self.prefetch_factor
         )
 

@@ -91,6 +91,7 @@ class SimCLRDataModule(pl.LightningDataModule):
             shuffle=True,
             num_workers=self.num_workers,
             collate_fn=self._collate_fn,
+            pin_memory=True,
             prefetch_factor=self.prefetch_factor
         )
 

@@ -47,7 +47,8 @@ class OnlineProbing(pl.Callback):
         if trainer.current_epoch < self.backbone_warmup_epochs:
             return
 
-        self.optimizer.zero_grad()
+        for param in self.heads.parameters():
+            param.grad = None
 
         batch = batch['online_probing']
         images, roi_masks, gt_masks = batch

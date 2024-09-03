@@ -45,7 +45,11 @@ class UNet3d(nn.Module):
             mask_token=mask_token,
             **convnext_block_kwargs
         )
-        self.head = FPNLinearDenseHead3d(out_channels, fpn_out_channels, stem_stride)
+        self.head = FPNLinearDenseHead3d(
+            out_channels=out_channels,
+            fpn_stem_stride=stem_stride,
+            fpn_out_channels=fpn_out_channels
+        )
         self.final_norm = LayerNorm3d(out_channels, affin=final_affine) if final_ln else nn.Identity()
         self.final_act = nn.GELU() if final_gelu else nn.Identity()
         self.in_channels = in_channels

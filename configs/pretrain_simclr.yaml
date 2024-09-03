@@ -1,9 +1,9 @@
 defaults:
   - pretrain_datamodule: simclr
-  - backbone: unet
-  - heads/unet_linear
-  - heads/unet_nonlinear
-  - pretrain_model: simclr_unet
+  - backbone: fpn
+  - heads/fpn_linear
+  - heads/fpn_nonlinear
+  - pretrain_model: simclr
   - trainer: default
   - paths: default
   - hydra: default
@@ -23,4 +23,4 @@ online_probing:
 
 ckpt_path: null
 
-logs_group: pretrain/simclr_unet
+logs_group: pretrain/simclr

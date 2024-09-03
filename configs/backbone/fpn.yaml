@@ -10,3 +10,4 @@ final_ln: false
 final_affine: false
 final_gelu: false
 mask_token: True
+hidden_factor: 1

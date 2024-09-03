@@ -1,7 +1,6 @@
-datasets:
-  nlst: 1.0
-  amos_ct_labeled_train: 1.0
-  amos_ct_unlabeled_train: 1.0
-  abdomen_atlas: 1.0
-  flare23_labeled_train: 1.0
-  flare23_unlabeled_train: 1.0
+nlst: 1.0
+amos_ct_labeled_train: 1.0
+amos_ct_unlabeled_train: 1.0
+abdomen_atlas: 1.0
+flare23_labeled_train: 1.0
+flare23_unlabeled_train: 1.0

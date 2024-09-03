@@ -1,9 +1,9 @@
 defaults:
-  - pretrain_datamodule: simclr
+  - pretrain_datamodule: moco
   - backbone: unet
   - heads/unet_linear
   - heads/unet_nonlinear
-  - pretrain_model: simclr_unet
+  - pretrain_model: moco_unet
   - trainer: default
   - paths: default
   - hydra: default
@@ -23,4 +23,4 @@ online_probing:
 
 ckpt_path: null
 
-logs_group: pretrain/simclr_unet
+logs_group: pretrain/moco_unet
