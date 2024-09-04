@@ -4,9 +4,9 @@ proj_hidden_dim: 512
 proj_out_dim: 128
 pred_hidden_dim: 512
 temp: 0.1
-queue_size: 65_536
+queue_size: 1_048_576
 tau: 0.999
-lr: 0.0003
+lr: 0.01
 weight_decay: 0.000001
 warmup_steps: 10_000
 total_steps: ${trainer.max_steps}

@@ -98,19 +98,21 @@ class MIMDataModule(pl.LightningDataModule):
         )
 
     def _collate_fn(self, batch):
-        (target_images, target_masked_token_indices,
+        (target_images, target_image_masks, target_masked_token_indices,
          context_images, context_image_masks, context_tokens_masks,
          context_masked_token_indices) = zip(*batch)
+        
+        n = len(target_masked_token_indices)  # batch size
+        m = len(target_masked_token_indices[0])  # num scales
 
         return (
             torch.from_numpy(np.array(target_images)),
-            [[torch.from_numpy(indices) for indices in indices_per_scale]
-             for indices_per_scale in target_masked_token_indices],
-            torch.from_numpy(np.array(context_images)),
-            torch.from_numpy(np.array(context_image_masks)),
-            # TODO
-            [[torch.from_numpy(indices) for indices in indices_per_scale]
-             for indices_per_scale in context_masked_token_indices],
+            [torch.from_numpy(np.stack([target_image_masks[i][j] for i in range(n)])) for j in range(m)],
+            [[torch.from_numpy(target_masked_token_indices[i][j]) for i in range(n)] for j in range(m)],
+            [torch.from_numpy(np.stack([context_images[i][j] for i in range(n)])) for j in range(m)],
+            [torch.from_numpy(np.stack([context_image_masks[i][j] for i in range(n)])) for j in range(m)],
+            [torch.from_numpy(np.stack([context_tokens_masks[i][j] for i in range(n)])) for j in range(m)],
+            [[torch.from_numpy(context_masked_token_indices[i][j]) for i in range(n)] for j in range(m)],
         )
 
 
@@ -194,7 +196,7 @@ def _get_targets_and_contexts(
     tgt_img = crop_to_box(image, tgt_box)
     tgt_img = np.expand_dims(tgt_img, axis=0)  # add channel dim
 
-    tgt_msk_tkn_idxs, cxt_imgs, cxt_img_msks, cxt_tkn_msks, cxt_msk_tkn_idxs = [], [], [], [], []
+    tgt_img_msks, tgt_msk_tkn_idxs, cxt_imgs, cxt_img_msks, cxt_tkn_msks, cxt_msk_tkn_idxs = [], [], [], [], [], []
     for tkn_size, num_blocks in zip(token_size_per_scale, num_blocks_per_scale):
         assert np.all(tgt_size % tkn_size == 0)
         assert np.all(cxt_size % tkn_size == 0)
@@ -207,15 +209,18 @@ def _get_targets_and_contexts(
             cxt_body_msk, cxt_size, tkn_size, num_blocks,
             max_block_aspect_ratio, mask_ratio_range
         )
+        pad_width = np.stack([cxt_box[0] - tgt_box[0], tgt_box[1] - cxt_box[1]], axis=1)
+        tgt_img_msk = np.pad(cxt_img_msk, pad_width, constant_values=1.0)
         _tgt_msk_tkn_idxs = _cxt_msk_tkn_idxs + (cxt_box[0] - tgt_box[0]) // tkn_size
 
+        tgt_img_msks.append(tgt_img_msk)
         tgt_msk_tkn_idxs.append(_tgt_msk_tkn_idxs)
         cxt_imgs.append(cxt_img)
         cxt_img_msks.append(cxt_img_msk)
         cxt_tkn_msks.append(cxt_tkn_msk)
         cxt_msk_tkn_idxs.append(_cxt_msk_tkn_idxs)
 
-    return tgt_img, tgt_msk_tkn_idxs, cxt_imgs, cxt_img_msks, cxt_tkn_msks, cxt_msk_tkn_idxs
+    return tgt_img, tgt_img_msks, tgt_msk_tkn_idxs, cxt_imgs, cxt_img_msks, cxt_tkn_msks, cxt_msk_tkn_idxs
 
 
 def _get_context_mask(
