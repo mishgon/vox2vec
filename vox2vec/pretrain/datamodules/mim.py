@@ -40,8 +40,8 @@ class MIMDataModule(pl.LightningDataModule):
             self,
             data_paths: MIMDataPaths,
             datasets: MIMDatasets = MIMDatasets(),
-            target_crop_size: Tuple[int, int, int] = (256, 256, 128),
-            context_crop_size: Tuple[int, int, int] = (224, 224, 112),
+            target_crop_size: Tuple[int, int, int] = (224, 224, 112),
+            context_crop_size: Tuple[int, int, int] = (192, 192, 96),
             token_size_per_scale: Sequence[Tuple[int, int, int]] = ((4, 4, 2), (8, 8, 4), (16, 16, 8), (32, 32, 16)),
             num_blocks_per_scale: Sequence[int] = (512, 64, 8, 1),
             max_block_aspect_ratio: float = 3 / 2,
@@ -56,12 +56,12 @@ class MIMDataModule(pl.LightningDataModule):
 
         self.data_paths = data_paths
         self.datasets = datasets
-        self.target_crop_size = target_crop_size
-        self.context_crop_size = context_crop_size
-        self.token_size_per_scale = token_size_per_scale
-        self.num_blocks_per_scale = num_blocks_per_scale
+        self.target_crop_size = tuple(target_crop_size)
+        self.context_crop_size = tuple(context_crop_size)
+        self.token_size_per_scale = list(map(tuple, token_size_per_scale))
+        self.num_blocks_per_scale = list(num_blocks_per_scale)
         self.max_block_aspect_ratio = max_block_aspect_ratio
-        self.mask_ratio_range = mask_ratio_range
+        self.mask_ratio_range = tuple(mask_ratio_range)
         self.batch_size = batch_size
         self.num_batches_per_epoch = num_batches_per_epoch
         self.num_workers = num_workers

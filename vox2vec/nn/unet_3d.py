@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from medimm.fpn_3d import FPN3d, FPNLinearDenseHead3d, crop_and_pad_to
+from medimm.fpn_3d import FPN3d, FPNLinearDenseHead3d, _crop_and_pad_to
 from medimm.layers.norm import LayerNorm3d
 
 
@@ -102,7 +102,7 @@ class UNetDenseHead3d(nn.Module):
         # upsample and pad logits to the original images' spatial resolution
         x = F.interpolate(x, scale_factor=self.unet_stem_stride, mode='trilinear')
         if x.shape[2:] != image.shape[2:]:
-            x = crop_and_pad_to(x, image)
+            x = _crop_and_pad_to(x, image)
 
         return x
 
@@ -136,6 +136,6 @@ class UNetLinearDenseHead3d(nn.Module):
         # upsample and pad logits to the original images' spatial resolution
         x = F.interpolate(x, scale_factor=self.unet_stem_stride, mode='trilinear')
         if x.shape[2:] != image.shape[2:]:
-            x = crop_and_pad_to(x, image)
+            x = _crop_and_pad_to(x, image)
 
         return x

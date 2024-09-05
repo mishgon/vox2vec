@@ -9,10 +9,6 @@ spatial_augmentations:
   context_max_voxel_spacing: [2.0, 2.0, 4.0]
   context_crop_size: [64, 64, 32]
   target_crop_size: [128, 128, 64]
-masking:
-  p: 0.0
-  ratio: 0.6
-  block_size: [16, 16, 8]
 num_voxels_per_crop: 512
 batch_size: 8
 num_batches_per_epoch: 3000

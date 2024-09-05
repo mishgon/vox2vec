@@ -1,0 +1,35 @@
+defaults:
+  - pretrain_datamodule: mim
+  - backbone: fpn_for_mim
+  - heads/fpn_linear
+  - heads/fpn_nonlinear
+  - pretrain_model: mim
+  - trainer: default
+  - paths: default
+  - hydra: default
+  - _self_
+
+
+pretrain_datamodule:
+  datasets:
+    nlst: 1.0
+    amos_ct_labeled_train: 0.0
+    amos_ct_unlabeled_train: 0.0
+    abdomen_atlas: 0.0
+    flare23_labeled_train: 0.0
+    flare23_unlabeled_train: 0.0
+
+heads:
+  linear:
+    out_channels: 1
+  nonlinear:
+    out_channels: 1
+
+online_probing:
+  crop_size: [256, 256, 128]
+  batch_size: 4
+  num_workers: 4
+
+ckpt_path: null
+
+logs_group: pretrain/mim

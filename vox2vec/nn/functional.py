@@ -95,6 +95,9 @@ def take_features_from_map(
         stride: Union[int, Tuple[int, int, int]] = 1,
         mode: Literal['nearest', 'trilinear'] = 'trilinear',
 ) -> torch.Tensor:
+    if stride == 1:
+        return feature_map.movedim(0, -1)[voxel_indices.unbind(1)]
+
     stride = torch.tensor(stride).to(voxel_indices)
     min_indices = torch.tensor(0).to(voxel_indices)
     max_indices = torch.tensor(feature_map.shape[-3:]).to(voxel_indices) - 1

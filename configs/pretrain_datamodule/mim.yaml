@@ -1,0 +1,15 @@
+defaults:
+  - data_paths
+  - datasets: all
+
+_target_: vox2vec.pretrain.datamodules.mim.MIMDataModule
+target_crop_size: [224, 224, 112]
+context_crop_size: [192, 192, 96]
+token_size_per_scale: [[4, 4, 2], [8, 8, 4], [16, 16, 8], [32, 32, 16]]
+num_blocks_per_scale: [512, 64, 8, 1]
+max_block_aspect_ratio: 1.5
+mask_ratio_range: [0.6, 0.8]
+batch_size: 4
+num_batches_per_epoch: 3000
+num_workers: 8
+random_seed: 42

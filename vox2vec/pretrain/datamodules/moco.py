@@ -43,13 +43,6 @@ class MoCoSpatialAugmentations:
     target_crop_size: Tuple[int, int, int] = (128, 128, 64)
 
 
-@dataclass
-class MoCoMasking:
-    p: float = 0.0
-    ratio: float = 0.6
-    block_size: Optional[Tuple[int, int, int]] = (16, 16, 8)
-
-
 class MoCoDataModule(pl.LightningDataModule):
     def __init__(
             self,
@@ -57,7 +50,6 @@ class MoCoDataModule(pl.LightningDataModule):
             datasets: MoCoDatasets = MoCoDatasets(),
             spatial_augmentations: MoCoSpatialAugmentations = MoCoSpatialAugmentations(),
             color_augmentations: ColorAugmentations = ColorAugmentations(),
-            masking: MoCoMasking = MoCoMasking(),
             num_voxels_per_crop: int = 512,
             batch_size: int = 8,  # images per batch
             num_batches_per_epoch: int = 3000,
@@ -71,7 +63,6 @@ class MoCoDataModule(pl.LightningDataModule):
         self.datasets = datasets
         self.spatial_augmentations = spatial_augmentations
         self.color_augmentations = color_augmentations
-        self.masking = masking
         self.num_voxels_per_crop = num_voxels_per_crop
         self.batch_size = batch_size
         self.num_batches_per_epoch = num_batches_per_epoch
@@ -89,7 +80,6 @@ class MoCoDataModule(pl.LightningDataModule):
             datasets=self.datasets,
             spatial_augmentations=self.spatial_augmentations,
             color_augmentations=self.color_augmentations,
-            masking=self.masking,
             num_voxels_per_crop=self.num_voxels_per_crop,
             num_images_per_epoch=num_images_per_epoch,
             random_seed=self.random_seed
@@ -107,14 +97,12 @@ class MoCoDataModule(pl.LightningDataModule):
         )
 
     def _collate_fn(self, batch):
-        (target_images, target_voxel_indices,
-         context_images, context_masks, context_voxel_indices) = zip(*batch)
+        target_images, target_voxel_indices, context_images, context_voxel_indices = zip(*batch)
 
         return (
             torch.from_numpy(np.stack(target_images)),
             [torch.from_numpy(indices) for indices in target_voxel_indices],
             torch.from_numpy(np.stack(context_images)),
-            torch.from_numpy(np.stack(context_masks)),
             [torch.from_numpy(indices) for indices in context_voxel_indices],
         )
 
@@ -126,7 +114,6 @@ class _MoCoDataset(Dataset):
             datasets: MoCoDatasets,
             spatial_augmentations: MoCoSpatialAugmentations,
             color_augmentations: ColorAugmentations,
-            masking: MoCoMasking,
             num_voxels_per_crop: int,
             num_images_per_epoch: int,
             random_seed: int
@@ -135,7 +122,6 @@ class _MoCoDataset(Dataset):
 
         self.spatial_augmentations = spatial_augmentations
         self.color_augmentations = color_augmentations
-        self.masking = masking
         self.num_voxels_per_crop = num_voxels_per_crop
         self.num_images_per_epoch = num_images_per_epoch
 
@@ -171,7 +157,6 @@ class _MoCoDataset(Dataset):
             body_mask=body_mask,
             spatial_augmentations=self.spatial_augmentations,
             color_augmentations=self.color_augmentations,
-            masking=self.masking,
             num_voxels_per_crop=self.num_voxels_per_crop,
         )
 
@@ -182,7 +167,6 @@ def _get_targets_and_contexts(
         body_mask: np.ndarray,
         spatial_augmentations: MoCoSpatialAugmentations,
         color_augmentations: ColorAugmentations,
-        masking: MoCoMasking,
         num_voxels_per_crop: int,
 ) -> Tuple:
     image_size = np.array(image.shape, dtype='int64')
@@ -228,27 +212,7 @@ def _get_targets_and_contexts(
     # augment colors
     context_image = augment_color(context_image, context_voxel_spacing, color_augmentations)
 
-    # sample mask
-    context_mask = _get_context_mask(context_crop_size, masking)
-
     # add channel dim
     context_image = np.expand_dims(context_image, axis=0)
 
-    return target_image, target_voxel_indices, context_image, context_mask, context_voxel_indices
-
-
-def _get_context_mask(context_crop_size: np.ndarray, masking: MoCoMasking) -> np.ndarray:
-    if masking.ratio == 0.0 or random.uniform(0, 1) > masking.p:
-        return np.ones(context_crop_size, dtype='float32')
-    
-    block_size = np.array(masking.block_size, dtype='int64')
-
-    assert np.all(context_crop_size % block_size == 0)
-
-    mask = np.ones(context_crop_size // block_size, dtype='float32')
-    mask[np.unravel_index(np.random.permutation(mask.size)[:int(mask.size * masking.ratio)], mask.shape)] = 0.0
-    assert (mask != 1.0).any()
-    for axis, repeats in enumerate(block_size):
-        mask = np.repeat(mask, repeats, axis)
-
-    return mask
+    return target_image, target_voxel_indices, context_image, context_voxel_indices
