@@ -10,7 +10,7 @@ spatial_augmentations:
   context_crop_size: [64, 64, 32]
   target_crop_size: [128, 128, 64]
 num_voxels_per_crop: 512
-batch_size: 8
+batch_size: 4
 num_batches_per_epoch: 3000
 num_workers: 8
 random_seed: 42

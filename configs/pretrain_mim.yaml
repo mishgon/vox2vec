@@ -1,6 +1,6 @@
 defaults:
   - pretrain_datamodule: mim
-  - backbone: fpn_for_mim
+  - backbone: fpn
   - heads/fpn_linear
   - heads/fpn_nonlinear
   - pretrain_model: mim
@@ -26,7 +26,7 @@ heads:
     out_channels: 1
 
 online_probing:
-  crop_size: [256, 256, 128]
+  crop_size: [224, 224, 112]
   batch_size: 4
   num_workers: 4
 

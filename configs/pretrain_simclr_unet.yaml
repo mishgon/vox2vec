@@ -1,6 +1,6 @@
 defaults:
   - pretrain_datamodule: simclr
-  - backbone: unet
+  - backbone: unet_fullres
   - heads/unet_linear
   - heads/unet_nonlinear
   - pretrain_model: simclr_unet
@@ -18,6 +18,9 @@ pretrain_datamodule:
     abdomen_atlas: 0.0
     flare23_labeled_train: 0.0
     flare23_unlabeled_train: 0.0
+
+backbone:
+  final_ln: false
 
 heads:
   linear:

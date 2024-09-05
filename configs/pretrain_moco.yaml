@@ -1,5 +1,5 @@
 defaults:
-  - pretrain_datamodule: moco
+  - pretrain_datamodule: simclr
   - backbone: fpn
   - heads/fpn_linear
   - heads/fpn_nonlinear
