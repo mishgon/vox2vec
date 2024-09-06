@@ -1,4 +1,4 @@
-from typing import Callable, Sequence, Union, Any, Tuple, List
+from typing import Callable, Sequence, Union, Any, Tuple, List, Any
 
 import random
 from joblib import Parallel, delayed, parallel_backend
@@ -6,6 +6,10 @@ from tqdm.auto import tqdm
 
 import numpy as np
 from numpy.core.numeric import normalize_axis_tuple
+
+
+def identity(x: Any) -> Any:
+    return x
 
 
 def normalize_axis_list(axis, ndim):

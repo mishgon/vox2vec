@@ -61,7 +61,7 @@ def prepare_id(i: str, config: DictConfig) -> None:
     save_numpy(body_mask, save_dirpath / 'body_mask.npy.gz', compression=1, timestamp=0)
 
 
-@hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
+@hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig):
     ids = [path.name for path in Path(config.paths.abdomen_atlas_src_dirpath).glob('uncompressed/BDMAP_*')]
 

@@ -100,7 +100,7 @@ def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'unl
     save_numpy(body_mask, save_dirpath / 'body_mask.npy.gz', compression=1, timestamp=0)
 
 
-@hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
+@hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig):
     labeled_train_ids, unlabeled_train_ids, labeled_val_ids = get_ids(config)
 

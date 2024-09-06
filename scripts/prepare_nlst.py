@@ -85,7 +85,7 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
     save_numpy(body_mask, save_dirpath / 'body_mask.npy.gz', compression=1, timestamp=0)
 
 
-@hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
+@hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig): 
     patient_dirpaths = list(Path(config.paths.nlst_src_dirpath).glob('NLST/*'))
 

@@ -137,7 +137,7 @@ def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'val
     save_numpy(body_mask, save_dirpath / 'body_mask.npy.gz', compression=1, timestamp=0)
 
 
-@hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
+@hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig):
     # parse ids from the archive files
     ct_labeled_train_ids, ct_val_ids, ct_test_ids, ct_unlabeled_train_ids = get_ids(config)

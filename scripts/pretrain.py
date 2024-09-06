@@ -16,7 +16,7 @@ rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
 resource.setrlimit(resource.RLIMIT_NOFILE, (8192, rlimit[1]))
 
 
-@hydra.main(version_base=None, config_path='configs', config_name=None)
+@hydra.main(version_base=None, config_path='../configs', config_name=None)
 def main(config: DictConfig):
     """Run pre-training with online probing.
 

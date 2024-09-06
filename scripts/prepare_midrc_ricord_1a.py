@@ -28,7 +28,7 @@ LABELS = [
 ]
 
 
-@hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
+@hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig):
     src_dirpath = Path(config.paths.midrc_ricord_1a_src_dirpath)
 

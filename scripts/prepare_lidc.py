@@ -18,6 +18,7 @@ from vox2vec.utils.io import save_numpy, save_json
 
 
 MIN_ANNOTATIONS_PER_NODULE = 3
+MIN_NODULE_VOLUME_MM3 = 100
 
 
 def prepare_scan(scan: pl.Scan, config: DictConfig):
@@ -55,7 +56,7 @@ def prepare_scan(scan: pl.Scan, config: DictConfig):
     # create mask using pylidc
     mask = np.zeros(image.shape, dtype=bool)
     for anns in scan.cluster_annotations():
-        if len(anns) >= MIN_ANNOTATIONS_PER_NODULE:
+        if len(anns) >= MIN_ANNOTATIONS_PER_NODULE and np.mean([a.volume for a in anns]) > MIN_NODULE_VOLUME_MM3:
             cmask, cbbox, _ = consensus(anns)
             mask[cbbox] = cmask
     # pylidc stacks slices in the other order than us
@@ -84,7 +85,7 @@ def prepare_scan(scan: pl.Scan, config: DictConfig):
     save_numpy(body_mask, save_dirpath / 'body_mask.npy.gz', compression=1, timestamp=0)
 
 
-@hydra.main(version_base=None, config_path='configs', config_name='prepare_data')
+@hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig):
     scans = pl.query(pl.Scan).all()
 
