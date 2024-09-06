@@ -1,9 +1,9 @@
 defaults:
-  - data_paths
-  - datasets: all
+  - pretrain_data_fractions: default
   - color_augmentations: default
 
 _target_: vox2vec.pretrain.datamodules.simclr.SimCLRDataModule
+prepared_data_dirs: ${paths.prepared_data_dirs}
 spatial_augmentations:
   min_voxel_spacing: [1.0, 1.0, 2.0]
   max_voxel_spacing: [2.0, 2.0, 4.0]

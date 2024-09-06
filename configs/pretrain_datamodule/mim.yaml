@@ -1,8 +1,8 @@
 defaults:
-  - data_paths
-  - datasets: all
+  - pretrain_data_fractions: default
 
 _target_: vox2vec.pretrain.datamodules.mim.MIMDataModule
+prepared_data_dirs: ${paths.prepared_data_dirs}
 target_crop_size: [224, 224, 112]
 context_crop_size: [192, 192, 96]
 token_size_per_scale: [[4, 4, 2], [8, 8, 4], [16, 16, 8], [32, 32, 16]]

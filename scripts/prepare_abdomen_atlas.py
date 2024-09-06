@@ -7,11 +7,12 @@ from vox2vec.preprocessing.nifty import affine_to_voxel_spacing, to_canonical_or
 from vox2vec.preprocessing.common import preprocess, Data
 from vox2vec.utils.misc import ProgressParallel, is_diagonal
 from vox2vec.utils.io import save_numpy, save_json
+from vox2vec.typing import SourceDataDirs, PreparedDataDirs
 
 
 def prepare_id(i: str, config: DictConfig) -> None:
     # load image and affine
-    image_filepath = Path(config.paths.abdomen_atlas_src_dirpath) / 'uncompressed' / i / 'ct.nii.gz'
+    image_filepath = Path(config.paths.source_data_dirs.abdomen_atlas) / 'uncompressed' / i / 'ct.nii.gz'
     image_nii = nibabel.load(image_filepath)
     image_nii = nibabel.as_closest_canonical(image_nii)
     affine = image_nii.affine
@@ -20,7 +21,7 @@ def prepare_id(i: str, config: DictConfig) -> None:
     image = image_nii.get_fdata()
 
     # load mask and mask affine
-    mask_filepath = Path(config.paths.abdomen_atlas_src_dirpath) / 'uncompressed' / i / 'combined_labels.nii.gz'
+    mask_filepath = Path(config.paths.source_data_dirs.abdomen_atlas) / 'uncompressed' / i / 'combined_labels.nii.gz'
     mask_nii = nibabel.load(mask_filepath)
     mask_nii = nibabel.as_closest_canonical(mask_nii)
     mask_affine = mask_nii.affine
@@ -52,7 +53,7 @@ def prepare_id(i: str, config: DictConfig) -> None:
     if any(image.shape[i] < config.min_image_size[i] for i in range(3)):
         return
 
-    save_dirpath = Path(config.paths.abdomen_atlas_dirpath) / i
+    save_dirpath = Path(config.paths.prepared_data_dirs.abdomen_atlas) / i
     save_dirpath.mkdir(parents=True)
     save_numpy(image.astype('float16'), save_dirpath / 'image.npy.gz', compression=1, timestamp=0)
     save_json(voxel_spacing, save_dirpath / 'voxel_spacing.json')
@@ -63,7 +64,7 @@ def prepare_id(i: str, config: DictConfig) -> None:
 
 @hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig):
-    ids = [path.name for path in Path(config.paths.abdomen_atlas_src_dirpath).glob('uncompressed/BDMAP_*')]
+    ids = [path.name for path in Path(config.paths.source_data_dirs.abdomen_atlas).glob('uncompressed/BDMAP_*')]
 
     ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(ids), desc='Preparing AbdomenAtlas')(
         (prepare_id, [i, config], {}) for i in ids

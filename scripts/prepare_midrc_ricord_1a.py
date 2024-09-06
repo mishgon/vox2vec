@@ -30,7 +30,7 @@ LABELS = [
 
 @hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig):
-    src_dirpath = Path(config.paths.midrc_ricord_1a_src_dirpath)
+    src_dirpath = Path(config.paths.source_data_dirs.midrc_ricord_1a)
 
     anns: pd.DataFrame = mdai.common_utils.json_to_dataframe(
         src_dirpath / 'MIDRC-RICORD-1a_annotations_labelgroup_all_2020-Dec-8.json'
@@ -95,7 +95,7 @@ def main(config: DictConfig):
         if any(image.shape[i] < config.min_image_size[i] for i in range(3)):
             continue
 
-        save_dirpath = Path(config.paths.midrc_ricord_1a_dirpath) / series_uid
+        save_dirpath = Path(config.paths.prepared_data_dirs.midrc_ricord_1a) / series_uid
         save_dirpath.mkdir(parents=True)
         save_numpy(image.astype('float16'), save_dirpath / 'image.npy.gz', compression=1, timestamp=0)
         save_json(voxel_spacing, save_dirpath / 'voxel_spacing.json')

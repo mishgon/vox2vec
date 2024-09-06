@@ -7,9 +7,9 @@ defaults:
 
 # output directory, generated dynamically on each run
 run:
-  dir: ${paths.logs_dirpath}/${logs_group}/runs/${now:%Y-%m-%d}_${now:%H-%M-%S}
+  dir: ${paths.logs_dir}/${logs_group}/runs/${now:%Y-%m-%d}_${now:%H-%M-%S}
 sweep:
-  dir: ${paths.logs_dirpath}/${logs_group}/multiruns/${now:%Y-%m-%d}_${now:%H-%M-%S}
+  dir: ${paths.logs_dir}/${logs_group}/multiruns/${now:%Y-%m-%d}_${now:%H-%M-%S}
   subdir: ${hydra.job.num}
 
 # log git commit hash

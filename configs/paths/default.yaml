@@ -1,25 +1,27 @@
 # paths to the downloaded data
-nlst_src_dirpath: /home/jovyan/misha/data/nlst
-amos_src_dirpath: /home/jovyan/misha/data/amos
-abdomen_atlas_src_dirpath: /home/jovyan/misha/data/abdomen_atlas_1.0_mini
-flare23_src_dirpath: /home/jovyan/misha/data/flare23
-lidc_src_dirpath: /home/jovyan/misha/data/lidc
-midrc_ricord_1a_src_dirpath: /home/jovyan/misha/data/midrc_ricord_1a
+source_data_dirs:
+  nlst: /home/jovyan/misha/data/nlst
+  amos: /home/jovyan/misha/data/amos
+  abdomen_atlas: /home/jovyan/misha/data/abdomen_atlas_1.0_mini
+  flare23: /home/jovyan/misha/data/flare23
+  lidc: /home/jovyan/misha/data/lidc
+  midrc_ricord_1a: /home/jovyan/misha/data/midrc_ricord_1a
 
 # paths to the preprocessed data
-nlst_dirpath: /home/jovyan/misha/prep_data/nlst
-amos_ct_labeled_train_dirpath: /home/jovyan/misha/prep_data/amos_ct_labeled_train
-amos_ct_unlabeled_train_dirpath: /home/jovyan/misha/prep_data/amos_ct_unlabeled_train
-amos_ct_val_dirpath: /home/jovyan/misha/prep_data/amos_ct_val
-abdomen_atlas_dirpath: /home/jovyan/misha/prep_data/abdomen_atlas_1.0_mini
-flare23_labeled_train_dirpath: /home/jovyan/misha/prep_data/flare23_labeled_train
-flare23_unlabeled_train_dirpath: /home/jovyan/misha/prep_data/flare23_unlabeled_train
-flare23_labeled_val_dirpath: /home/jovyan/misha/prep_data/flare23_labeled_val
-lidc_dirpath: /home/jovyan/misha/prep_data/lidc
-midrc_ricord_1a_dirpath: /home/jovyan/misha/prep_data/midrc_ricord_1a
+prepared_data_dirs:
+  nlst: /home/jovyan/misha/prep_data/nlst
+  amos_ct_labeled_train: /home/jovyan/misha/prep_data/amos_ct_labeled_train
+  amos_ct_unlabeled_train: /home/jovyan/misha/prep_data/amos_ct_unlabeled_train
+  amos_ct_val: /home/jovyan/misha/prep_data/amos_ct_val
+  abdomen_atlas: /home/jovyan/misha/prep_data/abdomen_atlas_1.0_mini
+  flare23_labeled_train: /home/jovyan/misha/prep_data/flare23_labeled_train
+  flare23_unlabeled_train: /home/jovyan/misha/prep_data/flare23_unlabeled_train
+  flare23_labeled_val: /home/jovyan/misha/prep_data/flare23_labeled_val
+  lidc: /home/jovyan/misha/prep_data/lidc
+  midrc_ricord_1a: /home/jovyan/misha/prep_data/midrc_ricord_1a
 
 # under this path all experiments' logs are saved
-logs_dirpath: /home/jovyan/misha/experiments/vox2vec_public
+logs_dir: /home/jovyan/misha/experiments/vox2vec_public
 
 # path to the output directory, created dynamically by hydra
 # path generation pattern is specified in `configs/hydra/default.yaml`

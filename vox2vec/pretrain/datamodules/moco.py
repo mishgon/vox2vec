@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple, Optional, Union, Sequence
+from typing import Tuple, Optional, Union
 from pathlib import Path
 import random
 import numpy as np
@@ -13,27 +13,8 @@ import lightning.pytorch as pl
 from vox2vec.utils.io import load_numpy, load_json
 from vox2vec.utils.misc import get_random_sample
 from vox2vec.utils.box import get_random_box, get_overlap_box
+from vox2vec.typing import PreparedDataDirs, PretrainDataFractions
 from .augmentations import ColorAugmentations, augment_color
-
-
-@dataclass
-class MoCoDataPaths:
-    nlst_dirpath: str
-    amos_ct_labeled_train_dirpath: str
-    amos_ct_unlabeled_train_dirpath: str
-    abdomen_atlas_dirpath: str
-    flare23_labeled_train_dirpath: str
-    flare23_unlabeled_train_dirpath: str
-
-
-@dataclass
-class MoCoDatasets:
-    nlst: Union[float, int] = 1.0
-    amos_ct_labeled_train: Union[float, int] = 1.0
-    amos_ct_unlabeled_train: Union[float, int] = 1.0
-    abdomen_atlas: Union[float, int] = 1.0
-    flare23_labeled_train: Union[float, int] = 1.0
-    flare23_unlabeled_train: Union[float, int] = 1.0
 
 
 @dataclass
@@ -47,22 +28,23 @@ class MoCoSpatialAugmentations:
 class MoCoDataModule(pl.LightningDataModule):
     def __init__(
             self,
-            data_paths: MoCoDataPaths,
-            datasets: MoCoDatasets = MoCoDatasets(),
+            prepared_data_dirs: PreparedDataDirs,
+            nlst_val_size: int = 1000,
+            pretrain_data_fractions: PretrainDataFractions = PretrainDataFractions(),
             spatial_augmentations: MoCoSpatialAugmentations = MoCoSpatialAugmentations(),
             color_augmentations: ColorAugmentations = ColorAugmentations(),
             num_voxels_per_crop: int = 512,
-            batch_size: int = 8,  # images per batch
+            batch_size: int = 8,  # num images per batch
             num_batches_per_epoch: int = 3000,
             num_workers: int = 0,
             prefetch_factor: Optional[int] = None,
-            nlst_val_size: int = 1000,
             random_seed: int = 42,
     ) -> None:
         super().__init__()
 
-        self.data_paths = data_paths
-        self.datasets = datasets
+        self.prepared_data_dirs = prepared_data_dirs
+        self.nlst_val_size = nlst_val_size
+        self.pretrain_data_fractions = pretrain_data_fractions
         self.spatial_augmentations = spatial_augmentations
         self.color_augmentations = color_augmentations
         self.num_voxels_per_crop = num_voxels_per_crop
@@ -70,7 +52,6 @@ class MoCoDataModule(pl.LightningDataModule):
         self.num_batches_per_epoch = num_batches_per_epoch
         self.num_workers = num_workers
         self.prefetch_factor = prefetch_factor
-        self.nlst_val_size = nlst_val_size
         self.random_seed = random_seed
 
     def prepare_data(self) -> None:
@@ -79,13 +60,13 @@ class MoCoDataModule(pl.LightningDataModule):
     def setup(self, stage: str = 'fit') -> None:
         num_images_per_epoch = self.batch_size * self.num_batches_per_epoch
         self.train_dataset = _MoCoDataset(
-            data_paths=self.data_paths,
-            datasets=self.datasets,
+            prepared_data_dirs=self.prepared_data_dirs,
+            nlst_val_size=self.nlst_val_size,
+            pretrain_data_fractions=self.pretrain_data_fractions,
             spatial_augmentations=self.spatial_augmentations,
             color_augmentations=self.color_augmentations,
             num_voxels_per_crop=self.num_voxels_per_crop,
             num_images_per_epoch=num_images_per_epoch,
-            nlst_val_size=self.nlst_val_size,
             random_seed=self.random_seed
         )
 
@@ -114,13 +95,13 @@ class MoCoDataModule(pl.LightningDataModule):
 class _MoCoDataset(Dataset):
     def __init__(
             self,
-            data_paths: MoCoDataPaths,
-            datasets: MoCoDatasets,
+            prepared_data_dirs: PreparedDataDirs,
+            nlst_val_size: int,
+            pretrain_data_fractions: PretrainDataFractions,
             spatial_augmentations: MoCoSpatialAugmentations,
             color_augmentations: ColorAugmentations,
             num_voxels_per_crop: int,
             num_images_per_epoch: int,
-            nlst_val_size: int,
             random_seed: int
     ) -> None:
         super().__init__()
@@ -130,22 +111,22 @@ class _MoCoDataset(Dataset):
         self.num_voxels_per_crop = num_voxels_per_crop
         self.num_images_per_epoch = num_images_per_epoch
 
-        nlst_image_dirpaths, _ = train_test_split(list(Path(data_paths.nlst_dirpath).iterdir()),
+        nlst_image_dirpaths, _ = train_test_split(list(Path(prepared_data_dirs.nlst).iterdir()),
                                                   test_size=nlst_val_size, random_state=random_seed)
         random.seed(random_seed)
         self.image_dirpaths = (
             get_random_sample(population=nlst_image_dirpaths,
-                              size=datasets.nlst)
-            + get_random_sample(population=list(Path(data_paths.amos_ct_labeled_train_dirpath).iterdir()),
-                                size=datasets.amos_ct_labeled_train)
-            + get_random_sample(population=list(Path(data_paths.amos_ct_unlabeled_train_dirpath).iterdir()),
-                                size=datasets.amos_ct_unlabeled_train)
-            + get_random_sample(population=list(Path(data_paths.abdomen_atlas_dirpath).iterdir()),
-                                size=datasets.abdomen_atlas)
-            + get_random_sample(population=list(Path(data_paths.flare23_labeled_train_dirpath).iterdir()),
-                                size=datasets.flare23_labeled_train)
-            + get_random_sample(population=list(Path(data_paths.flare23_unlabeled_train_dirpath).iterdir()),
-                                size=datasets.flare23_unlabeled_train)
+                              size=pretrain_data_fractions.nlst)
+            + get_random_sample(population=list(Path(prepared_data_dirs.amos_ct_labeled_train).iterdir()),
+                                size=pretrain_data_fractions.amos_ct_labeled_train)
+            + get_random_sample(population=list(Path(prepared_data_dirs.amos_ct_unlabeled_train).iterdir()),
+                                size=pretrain_data_fractions.amos_ct_unlabeled_train)
+            + get_random_sample(population=list(Path(prepared_data_dirs.abdomen_atlas).iterdir()),
+                                size=pretrain_data_fractions.abdomen_atlas)
+            + get_random_sample(population=list(Path(prepared_data_dirs.flare23_labeled_train).iterdir()),
+                                size=pretrain_data_fractions.flare23_labeled_train)
+            + get_random_sample(population=list(Path(prepared_data_dirs.flare23_unlabeled_train).iterdir()),
+                                size=pretrain_data_fractions.flare23_unlabeled_train)
         )
 
     def __len__(self):

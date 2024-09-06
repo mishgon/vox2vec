@@ -77,7 +77,7 @@ def prepare_scan(scan: pl.Scan, config: DictConfig):
     if any(image.shape[i] < config.min_image_size[i] for i in range(3)):
         return
 
-    save_dirpath = Path(config.paths.lidc_dirpath) / series_uid
+    save_dirpath = Path(config.paths.prepared_data_dirs.lidc) / series_uid
     save_dirpath.mkdir(parents=True)
     save_numpy(image.astype('float16'), save_dirpath / 'image.npy.gz', compression=1, timestamp=0)
     save_json(voxel_spacing, save_dirpath / 'voxel_spacing.json')

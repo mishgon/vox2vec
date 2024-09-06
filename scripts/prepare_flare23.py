@@ -14,7 +14,7 @@ from vox2vec.utils.io import save_numpy, save_json
 
 
 def get_ids(config: DictConfig):
-    src_dirpath = Path(config.paths.flare23_src_dirpath)
+    src_dirpath = Path(config.paths.source_data_dirs.flare23)
     labeled_train_ids = [
         filepath.name[:-len('_0000.nii.gz')]
         for filepath in src_dirpath.glob('imagesTr2200/*_0000.nii.gz')
@@ -31,22 +31,22 @@ def get_ids(config: DictConfig):
 
 
 def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'unlabeled_train', 'labeled_val']) -> None:
-    src_dirpath = Path(config.paths.flare23_src_dirpath)
+    src_dirpath = Path(config.paths.source_data_dirs.flare23)
     match subset:
         case 'labeled_train':
             image_filepath = src_dirpath / f'imagesTr2200/{i}_0000.nii.gz'
             mask_filepath = src_dirpath / f'labelsTr2200/20230507-fix/{i}.nii.gz'
             if not mask_filepath.exists():
                 mask_filepath = src_dirpath / f'labelsTr2200/{i}.nii.gz'
-            save_dirpath = Path(config.paths.flare23_labeled_train_dirpath) / i
+            save_dirpath = Path(config.paths.prepared_data_dirs.flare23_labeled_train) / i
         case 'unlabeled_train':
             image_filepath = src_dirpath / f'unlabeledTr1800/{i}_0000.nii.gz'
             mask_filepath = None
-            save_dirpath = Path(config.paths.flare23_unlabeled_train_dirpath) / i
+            save_dirpath = Path(config.paths.prepared_data_dirs.flare23_unlabeled_train) / i
         case 'labeled_val':
             image_filepath = src_dirpath / f'validation/{i}_0000.nii.gz'
             mask_filepath = src_dirpath / f'val-gt-50cases-for-sanity-check/{i}.nii.gz'
-            save_dirpath = Path(config.paths.flare23_labeled_val_dirpath) / i
+            save_dirpath = Path(config.paths.prepared_data_dirs.flare23_labeled_val) / i
 
     # load image and affine (drop if non-diagonal)
     image_nii = nibabel.load(image_filepath)

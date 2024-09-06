@@ -78,7 +78,7 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
     if any(image.shape[i] < config.min_image_size[i] for i in range(3)):
         return
 
-    save_dirpath = Path(config.paths.nlst_dirpath) / series_uid
+    save_dirpath = Path(config.paths.prepared_data_dirs.nlst) / series_uid
     save_dirpath.mkdir(parents=True)
     save_numpy(image.astype('float16'), save_dirpath / 'image.npy.gz', compression=1, timestamp=0)
     save_json(voxel_spacing, save_dirpath / 'voxel_spacing.json')
@@ -87,7 +87,7 @@ def prepare_patient(patient_dirpath: Path, config: DictConfig) -> None:
 
 @hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig): 
-    patient_dirpaths = list(Path(config.paths.nlst_src_dirpath).glob('NLST/*'))
+    patient_dirpaths = list(Path(config.paths.source_data_dirs.nlst).glob('NLST/*'))
 
     ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(patient_dirpaths), desc='Preparing NLST')(
         (prepare_patient, [patient_dirpath, config], {}) for patient_dirpath in patient_dirpaths

@@ -21,7 +21,7 @@ DROP_IDS = (
 
 def get_ids(config: DictConfig):
     labeled_train_ids, val_ids, test_ids = [], [], []
-    with zipfile.ZipFile(Path(config.paths.amos_src_dirpath) / 'amos22.zip') as zf:
+    with zipfile.ZipFile(Path(config.paths.source_data_dirs.amos) / 'amos22.zip') as zf:
         for name in zf.namelist():
             if not name.endswith('.nii.gz'):
                 continue
@@ -45,7 +45,7 @@ def get_ids(config: DictConfig):
             'amos22_unlabeled_ct_5900_6199.zip',
             'amos22_unlabeled_ct_6200_6899.zip',
     ]:
-        with zipfile.ZipFile(Path(config.paths.amos_src_dirpath) / filename) as zf:
+        with zipfile.ZipFile(Path(config.paths.source_data_dirs.amos) / filename) as zf:
             for name in zf.namelist():
                 if not name.endswith('.nii.gz'):
                     continue
@@ -63,12 +63,12 @@ def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'val
             zip_filename = 'amos22.zip'
             image_filepath = f'amos22/imagesTr/amos_{i}.nii.gz'
             mask_filepath = f'amos22/labelsTr/amos_{i}.nii.gz'
-            save_dirpath = Path(config.paths.amos_ct_labeled_train_dirpath) / i
+            save_dirpath = Path(config.paths.prepared_data_dirs.amos_ct_labeled_train) / i
         case 'val':
             zip_filename = 'amos22.zip'
             image_filepath = f'amos22/imagesVa/amos_{i}.nii.gz'
             mask_filepath = f'amos22/labelsVa/amos_{i}.nii.gz'
-            save_dirpath = Path(config.paths.amos_ct_val_dirpath) / i
+            save_dirpath = Path(config.paths.prepared_data_dirs.amos_ct_val) / i
         case 'unlabeled_train':
             if 5000 <= int(i) < 5400:
                 zip_filename = 'amos22_unlabeled_ct_5000_5399.zip'
@@ -83,10 +83,10 @@ def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'val
                 zip_filename = 'amos22_unlabeled_ct_6200_6899.zip'
                 image_filepath = f'amos22_unlabeled_6200_6899/amos_{i}.nii.gz'
             mask_filepath = None
-            save_dirpath = Path(config.paths.amos_ct_unlabeled_train_dirpath) / i
+            save_dirpath = Path(config.paths.prepared_data_dirs.amos_ct_unlabeled_train) / i
 
     # read image and affine
-    with zipfile.Path(Path(config.paths.amos_src_dirpath) / zip_filename, image_filepath).open('rb') as gz_file:
+    with zipfile.Path(Path(config.paths.source_data_dirs.amos) / zip_filename, image_filepath).open('rb') as gz_file:
         with gzip.GzipFile(fileobj=gz_file) as nii_file:
             fh = nibabel.FileHolder(fileobj=nii_file)
             image_nii = nibabel.Nifti1Image.from_file_map({'header': fh, 'image': fh})
@@ -95,7 +95,7 @@ def prepare_id(i: str, config: DictConfig, subset: Literal['labeled_train', 'val
 
     # read mask
     if mask_filepath is not None:
-        with zipfile.Path(Path(config.paths.amos_src_dirpath) / zip_filename, mask_filepath).open('rb') as gz_file:
+        with zipfile.Path(Path(config.paths.source_data_dirs.amos) / zip_filename, mask_filepath).open('rb') as gz_file:
             with gzip.GzipFile(fileobj=gz_file) as nii_file:
                 fh = nibabel.FileHolder(fileobj=nii_file)
                 mask_nii = nibabel.Nifti1Image.from_file_map({'header': fh, 'image': fh})

@@ -1,7 +1,0 @@
-data_paths:
-  nlst_dirpath: ${paths.nlst_dirpath}
-  amos_ct_labeled_train_dirpath: ${paths.amos_ct_labeled_train_dirpath}
-  amos_ct_unlabeled_train_dirpath: ${paths.amos_ct_unlabeled_train_dirpath}
-  abdomen_atlas_dirpath: ${paths.abdomen_atlas_dirpath}
-  flare23_labeled_train_dirpath: ${paths.flare23_labeled_train_dirpath}
-  flare23_unlabeled_train_dirpath: ${paths.flare23_unlabeled_train_dirpath}
