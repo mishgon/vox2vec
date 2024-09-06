@@ -13,4 +13,5 @@ num_voxels_per_crop: 512
 batch_size: 4
 num_batches_per_epoch: 3000
 num_workers: 8
+nlst_val_size: 1000
 random_seed: 42

@@ -3,6 +3,7 @@ from typing import Tuple, Optional, Union
 from pathlib import Path
 import random
 import numpy as np
+from sklearn.model_selection import train_test_split
 from imops import crop_to_box, zoom
 
 import torch
@@ -54,6 +55,7 @@ class SimCLRDataModule(pl.LightningDataModule):
             num_batches_per_epoch: int = 3000,
             num_workers: int = 0,
             prefetch_factor: Optional[int] = None,
+            nlst_val_size: int = 1000,
             random_seed: int = 42,
     ) -> None:
         super().__init__()
@@ -67,6 +69,7 @@ class SimCLRDataModule(pl.LightningDataModule):
         self.num_batches_per_epoch = num_batches_per_epoch
         self.num_workers = num_workers
         self.prefetch_factor = prefetch_factor
+        self.nlst_val_size = nlst_val_size
         self.random_seed = random_seed
 
     def prepare_data(self) -> None:
@@ -81,6 +84,7 @@ class SimCLRDataModule(pl.LightningDataModule):
             color_augmentations=self.color_augmentations,
             num_voxels_per_crop=self.num_voxels_per_crop,
             num_images_per_epoch=num_images_per_epoch,
+            nlst_val_size=self.nlst_val_size,
             random_seed=self.random_seed
         )
 
@@ -114,6 +118,7 @@ class _SimCLRDataset(Dataset):
             color_augmentations: ColorAugmentations,
             num_voxels_per_crop: int,
             num_images_per_epoch: int,
+            nlst_val_size: int,
             random_seed: int
     ) -> None:
         super().__init__()
@@ -123,10 +128,11 @@ class _SimCLRDataset(Dataset):
         self.num_voxels_per_crop = num_voxels_per_crop
         self.num_images_per_epoch = num_images_per_epoch
 
+        nlst_image_dirpaths, _ = train_test_split(list(Path(data_paths.nlst_dirpath).iterdir()),
+                                                  test_size=nlst_val_size, random_state=random_seed)
         random.seed(random_seed)
-
         self.image_dirpaths = (
-            get_random_sample(population=list(Path(data_paths.nlst_dirpath).iterdir()),
+            get_random_sample(population=nlst_image_dirpaths,
                               size=datasets.nlst)
             + get_random_sample(population=list(Path(data_paths.amos_ct_labeled_train_dirpath).iterdir()),
                                 size=datasets.amos_ct_labeled_train)

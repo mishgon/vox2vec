@@ -4,6 +4,7 @@ from pathlib import Path
 import random
 import numpy as np
 from skimage.measure import block_reduce
+from sklearn.model_selection import train_test_split
 from imops import crop_to_box
 
 import torch
@@ -50,6 +51,7 @@ class MIMDataModule(pl.LightningDataModule):
             num_batches_per_epoch: int = 3000,
             num_workers: int = 0,
             prefetch_factor: Optional[int] = None,
+            nlst_val_size: int = 1000,
             random_seed: int = 42,
     ) -> None:
         super().__init__()
@@ -66,6 +68,7 @@ class MIMDataModule(pl.LightningDataModule):
         self.num_batches_per_epoch = num_batches_per_epoch
         self.num_workers = num_workers
         self.prefetch_factor = prefetch_factor
+        self.nlst_val_size = nlst_val_size
         self.random_seed = random_seed
 
     def prepare_data(self) -> None:
@@ -83,6 +86,7 @@ class MIMDataModule(pl.LightningDataModule):
             max_block_aspect_ratio=self.max_block_aspect_ratio,
             mask_ratio_range=self.mask_ratio_range,
             num_images_per_epoch=num_images_per_epoch,
+            nlst_val_size=self.nlst_val_size,
             random_seed=self.random_seed
         )
 
@@ -128,6 +132,7 @@ class _MIMDataset(Dataset):
             max_block_aspect_ratio: float,
             mask_ratio_range: Tuple[float, float],
             num_images_per_epoch: int,
+            nlst_val_size: int,
             random_seed: int
     ) -> None:
         super().__init__()
@@ -140,10 +145,11 @@ class _MIMDataset(Dataset):
         self.mask_ratio_range = mask_ratio_range
         self.num_images_per_epoch = num_images_per_epoch
 
+        nlst_image_dirpaths, _ = train_test_split(list(Path(data_paths.nlst_dirpath).iterdir()),
+                                                  test_size=nlst_val_size, random_state=random_seed)
         random.seed(random_seed)
-
         self.image_dirpaths = (
-            get_random_sample(population=list(Path(data_paths.nlst_dirpath).iterdir()),
+            get_random_sample(population=nlst_image_dirpaths,
                               size=datasets.nlst)
             + get_random_sample(population=list(Path(data_paths.amos_ct_labeled_train_dirpath).iterdir()),
                                 size=datasets.amos_ct_labeled_train)

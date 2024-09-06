@@ -12,4 +12,5 @@ mask_ratio_range: [0.6, 0.8]
 batch_size: 4
 num_batches_per_epoch: 3000
 num_workers: 8
+nlst_val_size: 1000
 random_seed: 42
