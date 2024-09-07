@@ -74,7 +74,8 @@ class MoCoUNet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         batch = batch['pretrain']
 
-        target_images_batch, target_voxel_indices_batch, context_images_batch, context_voxel_indices_batch = batch
+        (target_images_batch, target_masks_batch, target_voxel_indices_batch,
+         context_images_batch, context_masks_batch, context_voxel_indices_batch) = batch
 
         with torch.no_grad():
             target_feature_maps_batch = self.momentum_backbone(target_images_batch)
@@ -90,7 +91,7 @@ class MoCoUNet(pl.LightningModule):
 
             self.target_embeds_queue = torch.cat([target_embeds, self.target_embeds_queue[:-len(target_embeds)]])
 
-        context_feature_maps_batch = self.backbone(context_images_batch)
+        context_feature_maps_batch = self.backbone(context_images_batch, context_masks_batch)
         context_features = batched_take_features_from_map(
             context_feature_maps_batch,
             context_voxel_indices_batch,

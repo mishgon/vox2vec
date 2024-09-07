@@ -46,9 +46,10 @@ class SimCLRUNet(pl.LightningModule):
     def forward_voxel_embeds(
             self,
             images_batch: torch.Tensor,
+            masks_batch: torch.Tensor,
             voxel_indices_batch: Sequence[torch.Tensor]
     ) -> torch.Tensor:
-        feature_maps_batch = self.backbone(images_batch)
+        feature_maps_batch = self.backbone(images_batch, masks_batch)
         features = batched_take_features_from_map(
             feature_maps_batch,
             voxel_indices_batch,
@@ -61,10 +62,11 @@ class SimCLRUNet(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         batch = batch['pretrain']
 
-        images_batch_1, voxel_indices_batch_1, images_batch_2, voxel_indices_batch_2 = batch
+        (images_batch_1, masks_batch_1, voxel_indices_batch_1,
+         images_batch_2, masks_batch_2, voxel_indices_batch_2) = batch
 
-        embeds_1 = self.forward_voxel_embeds(images_batch_1, voxel_indices_batch_1)
-        embeds_2 = self.forward_voxel_embeds(images_batch_2, voxel_indices_batch_2)
+        embeds_1 = self.forward_voxel_embeds(images_batch_1, masks_batch_1, voxel_indices_batch_1)
+        embeds_2 = self.forward_voxel_embeds(images_batch_2, masks_batch_2, voxel_indices_batch_2)
 
         logits_11 = torch.matmul(embeds_1, embeds_1.T) / self.temp
         logits_11.fill_diagonal_(float('-inf'))

@@ -9,6 +9,10 @@ spatial_augmentations:
   min_voxel_spacing: [1.0, 1.0, 2.0]
   max_voxel_spacing: [2.0, 2.0, 4.0]
   crop_size: [128, 128, 64]
+masking:
+  p: 0.0
+  ratio: 0.6
+  block_size: [16, 16, 8]
 num_voxels_per_crop: 512
 batch_size: 4
 num_batches_per_epoch: 3000

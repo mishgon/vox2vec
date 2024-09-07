@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Sequence
 from pathlib import Path
 import random
 import numpy as np
@@ -24,6 +24,13 @@ class SimCLRSpatialAugmentations:
     crop_size: Tuple[int, int, int] = (128, 128, 64)
 
 
+@dataclass
+class SimCLRMasking:
+    p: float = 0.0
+    ratio: float = 0.6
+    block_size: Tuple[int, int, int] = (16, 16, 8)
+
+
 class SimCLRDataModule(pl.LightningDataModule):
     def __init__(
             self,
@@ -32,6 +39,7 @@ class SimCLRDataModule(pl.LightningDataModule):
             pretrain_data_fractions: PretrainDataFractions = PretrainDataFractions(),
             spatial_augmentations: SimCLRSpatialAugmentations = SimCLRSpatialAugmentations(),
             color_augmentations: ColorAugmentations = ColorAugmentations(),
+            masking: SimCLRMasking = SimCLRMasking(),
             num_voxels_per_crop: int = 512,
             batch_size: int = 8,  # num images per batch
             num_batches_per_epoch: int = 3000,
@@ -46,6 +54,7 @@ class SimCLRDataModule(pl.LightningDataModule):
         self.pretrain_data_fractions = pretrain_data_fractions
         self.spatial_augmentations = spatial_augmentations
         self.color_augmentations = color_augmentations
+        self.masking = masking
         self.num_voxels_per_crop = num_voxels_per_crop
         self.batch_size = batch_size
         self.num_batches_per_epoch = num_batches_per_epoch
@@ -64,6 +73,7 @@ class SimCLRDataModule(pl.LightningDataModule):
             pretrain_data_fractions=self.pretrain_data_fractions,
             spatial_augmentations=self.spatial_augmentations,
             color_augmentations=self.color_augmentations,
+            masking=self.masking,
             num_voxels_per_crop=self.num_voxels_per_crop,
             num_images_per_epoch=num_images_per_epoch,
             random_seed=self.random_seed
@@ -81,11 +91,13 @@ class SimCLRDataModule(pl.LightningDataModule):
         )
 
     def _collate_fn(self, batch):
-        (images_1, voxel_indices_1, images_2, voxel_indices_2) = zip(*batch)
+        (images_1, masks_1, voxel_indices_1, images_2, masks_2, voxel_indices_2) = zip(*batch)
         return (
             torch.from_numpy(np.stack(images_1)),
+            torch.from_numpy(np.stack(masks_1)),
             [torch.from_numpy(indices) for indices in voxel_indices_1],
             torch.from_numpy(np.stack(images_2)),
+            torch.from_numpy(np.stack(masks_2)),
             [torch.from_numpy(indices) for indices in voxel_indices_2],
         )
 
@@ -98,6 +110,7 @@ class _SimCLRDataset(Dataset):
             pretrain_data_fractions: PretrainDataFractions,
             spatial_augmentations: SimCLRSpatialAugmentations,
             color_augmentations: ColorAugmentations,
+            masking: SimCLRMasking,
             num_voxels_per_crop: int,
             num_images_per_epoch: int,
             random_seed: int
@@ -106,6 +119,7 @@ class _SimCLRDataset(Dataset):
 
         self.spatial_augmentations = spatial_augmentations
         self.color_augmentations = color_augmentations
+        self.masking = masking
         self.num_voxels_per_crop = num_voxels_per_crop
         self.num_images_per_epoch = num_images_per_epoch
 
@@ -142,6 +156,7 @@ class _SimCLRDataset(Dataset):
             body_mask=body_mask,
             spatial_augmentations=self.spatial_augmentations,
             color_augmentations=self.color_augmentations,
+            masking=self.masking,
             num_voxels_per_crop=self.num_voxels_per_crop,
         )
 
@@ -152,6 +167,7 @@ def _get_augmented_crops(
         body_mask: np.ndarray,
         spatial_augmentations: SimCLRSpatialAugmentations,
         color_augmentations: ColorAugmentations,
+        masking: SimCLRMasking,
         num_voxels_per_crop: int,
 ) -> Tuple:
     image_size = np.array(image.shape, dtype='int64')
@@ -177,11 +193,13 @@ def _get_augmented_crops(
     if len(voxel_indices) > num_voxels_per_crop:
         voxel_indices = voxel_indices[np.random.choice(len(voxel_indices), num_voxels_per_crop, replace=False)]
 
-    image_1, voxel_indices_1 = _get_augmented_crop(image, voxel_spacing, voxel_indices,
-                                                   crop_box_1, resize_factor_1, color_augmentations)
-    image_2, voxel_indices_2 = _get_augmented_crop(image, voxel_spacing, voxel_indices,
-                                                   crop_box_2, resize_factor_2, color_augmentations)
-    return image_1, voxel_indices_1, image_2, voxel_indices_2
+    image_1, masks_1, voxel_indices_1 = _get_augmented_crop(
+        image, voxel_spacing, voxel_indices, crop_box_1, resize_factor_1, color_augmentations, masking
+    )
+    image_2, masks_2, voxel_indices_2 = _get_augmented_crop(
+        image, voxel_spacing, voxel_indices, crop_box_2, resize_factor_2, color_augmentations, masking
+    )
+    return image_1, masks_1, voxel_indices_1, image_2, masks_2, voxel_indices_2
 
 
 def _get_augmented_crop(
@@ -190,7 +208,8 @@ def _get_augmented_crop(
         voxel_indices: np.ndarray,
         crop_box: np.ndarray,
         resize_factor: np.ndarray,
-        color_augmentations: ColorAugmentations
+        color_augmentations: ColorAugmentations,
+        masking: SimCLRMasking,
 ) -> Tuple:
     image = crop_to_box(image, crop_box)
     voxel_indices = voxel_indices - crop_box[0]
@@ -211,7 +230,28 @@ def _get_augmented_crop(
     # augment colors
     image = augment_color(image, voxel_spacing, color_augmentations)
 
+    # sample mask
+    mask = _get_random_mask(image.shape, masking)
+
     # add channel dim
     image = np.expand_dims(image, axis=0)
 
-    return image, voxel_indices
+    return image, mask, voxel_indices
+
+
+def _get_random_mask(size: Sequence[int], masking: SimCLRMasking) -> np.ndarray:
+    if masking.ratio == 0.0 or random.uniform(0, 1) > masking.p:
+        return np.ones(size, dtype='float32')
+
+    size = np.array(size, dtype='int64')
+    block_size = np.array(masking.block_size, dtype='int64')
+
+    assert np.all(size % block_size == 0)
+
+    mask = np.ones(size // block_size, dtype='float32')
+    mask[np.unravel_index(np.random.permutation(mask.size)[:int(mask.size * masking.ratio)], mask.shape)] = 0.0
+    assert (mask != 1.0).any()
+    for axis, repeats in enumerate(block_size):
+        mask = np.repeat(mask, repeats, axis)
+
+    return mask
