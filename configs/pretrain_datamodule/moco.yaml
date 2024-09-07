@@ -4,6 +4,7 @@ defaults:
 
 _target_: vox2vec.pretrain.datamodules.moco.MoCoDataModule
 prepared_data_dirs: ${paths.prepared_data_dirs}
+nlst_val_size: 1000
 spatial_augmentations:
   context_min_voxel_spacing: [1.0, 1.0, 2.0]
   context_max_voxel_spacing: [2.0, 2.0, 4.0]
@@ -13,5 +14,4 @@ num_voxels_per_crop: 512
 batch_size: 4
 num_batches_per_epoch: 3000
 num_workers: 8
-nlst_val_size: 1000
 random_seed: 42

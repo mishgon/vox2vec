@@ -3,9 +3,7 @@ from omegaconf import DictConfig
 import hydra
 
 import lightning.pytorch as pl
-from lightning.pytorch.callbacks import ModelCheckpoint
-from lightning.pytorch.loggers import TensorBoardLogger
-from lightning.pytorch.profilers import SimpleProfiler
+from lightning.pytorch.callbacks import ModelCheckpoint, LearningRateMonitor
 from lightning.pytorch.utilities import CombinedLoader
 
 from vox2vec.eval.datamodules.lidc import LIDCDataModule
@@ -43,7 +41,7 @@ def main(config: DictConfig):
 
     # 3. Online probing datamodule
     online_probing_dm = LIDCDataModule(
-        lidc_dirpath=config.paths.lidc_dirpath,
+        lidc_dirpath=config.paths.prepared_data_dirs.lidc,
         crop_size=config.online_probing.crop_size,
         batch_size=config.online_probing.batch_size,
         num_batches_per_epoch=config.pretrain_datamodule.num_batches_per_epoch,
@@ -65,7 +63,8 @@ def main(config: DictConfig):
             monitor='online_probing/head_1_dice_score_for_cls_0',
             save_last=True,
             mode='max',
-        )
+        ),
+        LearningRateMonitor()
     ]
 
     # 5. Trainer

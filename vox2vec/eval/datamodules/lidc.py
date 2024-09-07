@@ -20,7 +20,7 @@ class LIDCDataModule(pl.LightningDataModule):
             batch_size: int = 8,
             num_batches_per_epoch: int = 300,
             num_workers: int = 0,
-            val_size: int = 300,
+            val_size: int = 100,
             train_size: float = 1.0,
             random_seed: int = 42,
     ):
