@@ -1,5 +1,7 @@
-from typing import Optional
+from typing import Optional, Sequence
 from copy import deepcopy
+import matplotlib.pyplot as plt
+from matplotlib.colors import Normalize
 
 import torch
 from torch import nn
@@ -14,48 +16,24 @@ from vox2vec.nn.functional import batched_take_features_from_map
 from .ema import MomentumUpdater
 
 
-class Projector(nn.Module):
-    def __init__(
-            self,
-            embed_dim: int,
-            out_dim: int,
-            hidden_factor: float = 4.0
-    ):
-        super().__init__()
-
-        hidden_dim = int(embed_dim * hidden_factor)
-        self.layers = nn.Sequential(
-            nn.Conv3d(embed_dim, hidden_dim, kernel_size=1),
-            LayerNorm3d(hidden_dim),  # nn.BatchNorm3d(hidden_dim),
-            nn.GELU(),  # nn.ReLU(inplace=True),
-            nn.Conv3d(hidden_dim, hidden_dim, kernel_size=1),
-            LayerNorm3d(hidden_dim),  # nn.BatchNorm3d(hidden_dim),
-            nn.GELU(),  # nn.ReLU(inplace=True),
-            nn.Conv3d(hidden_dim, out_dim, kernel_size=1, bias=False),
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layers(x)
-
-
 class Predictor(nn.Module):
     def __init__(
             self,
-            proj_out_dim: int,
-            hidden_factor: float = 1.0,
-            depth: int = 3,
-            kernel_size: int = 5,
+            embed_dim: int,
+            hidden_factor: float = 1 / 2,
+            depth: int = 6,
+            kernel_size: int = 3,
             mask_token: bool = True,
     ):
         super().__init__()
 
-        hidden_dim = int(proj_out_dim * hidden_factor)
-        self.in_conv = nn.Conv3d(proj_out_dim, hidden_dim, kernel_size=1)
-        self.norm = LayerNorm3d(hidden_dim)
+        hidden_dim = int(embed_dim * hidden_factor)
+        self.projector = nn.Conv3d(embed_dim, hidden_dim - 1, kernel_size=1)
+        self.norm = LayerNorm3d(hidden_dim - 1)
         self.convnext_blocks = ConvNeXtStage3d(hidden_dim, depth, kernel_size=kernel_size)
-        self.out_conv = nn.Conv3d(hidden_dim, proj_out_dim, kernel_size=1)
+        self.expander = nn.Conv3d(hidden_dim, embed_dim, kernel_size=1)
         if mask_token:
-            self.mask_token = nn.Parameter(torch.zeros(hidden_dim))
+            self.mask_token = nn.Parameter(torch.zeros(hidden_dim - 1))
             nn.init.trunc_normal_(self.mask_token)
         else:
             self.mask_token = None
@@ -63,7 +41,7 @@ class Predictor(nn.Module):
     def forward(self, x: torch.Tensor, mask: torch.Tensor):
         mask = mask.unsqueeze(1)
 
-        x = self.in_conv(x)
+        x = self.projector(x)
 
         if self.mask_token is not None:
             fill_values = self.mask_token.view(-1, 1, 1, 1)
@@ -72,8 +50,13 @@ class Predictor(nn.Module):
         x = x * mask + fill_values * (1 - mask)
 
         x = self.norm(x)
+
+        # concat mask as an additional channel
+        x = torch.cat([x, mask], dim=1)
+
         x = self.convnext_blocks(x)
-        x = self.out_conv(x)
+
+        x = self.expander(x)
 
         return x
 
@@ -82,11 +65,9 @@ class MIM(pl.LightningModule):
     def __init__(
             self,
             backbone: FPN3d,
-            proj_hidden_factor: float = 4.0,
-            proj_out_dim: int = 128,
-            pred_hidden_factor: float = 1.0,
-            pred_depth: int = 3,
-            pred_kernel_size: int = 5,
+            pred_hidden_factor: float = 1 / 2,
+            pred_depth: int = 6,
+            pred_kernel_size: int = 3,
             base_tau: float = 0.996,
             final_tau: float = 1.0,
             lr: float = 3e-4,
@@ -97,21 +78,14 @@ class MIM(pl.LightningModule):
         super().__init__()
 
         self.backbone = backbone
-        self.num_scales = len(backbone.out_channels)
-        self.projectors = nn.ModuleList([
-            Projector(backbone.out_channels[j], proj_out_dim, proj_hidden_factor)
-            for j in range(self.num_scales)
-        ])
         self.predictors = nn.ModuleList([
-            Predictor(proj_out_dim, pred_hidden_factor, pred_depth, pred_kernel_size)
-            for _ in range(self.num_scales)
+            Predictor(embed_dim, pred_hidden_factor, pred_depth, pred_kernel_size)
+            for embed_dim in backbone.out_channels
         ])
+        self.num_scales = len(backbone.out_channels)
 
         self.momentum_backbone = deepcopy(self.backbone)
         for param in self.momentum_backbone.parameters():
-            param.requires_grad = False
-        self.momentum_projectors = deepcopy(self.projectors)
-        for param in self.momentum_projectors.parameters():
             param.requires_grad = False
         self.momentum_updater = MomentumUpdater(base_tau, final_tau)
 
@@ -134,32 +108,24 @@ class MIM(pl.LightningModule):
 
         with torch.no_grad():
             target_feature_pyramids = self.momentum_backbone(target_images)
-            target_embed_pyramids = [self.momentum_projectors[j](target_feature_pyramids[j])
-                                     for j in range(self.num_scales)]
 
         loss = 0.0
         for j in range(self.num_scales):
+            context_feature_pyramids = self.backbone(context_images[j], context_image_masks[j])
+
             target_embeds = batched_take_features_from_map(
-                feature_maps_batch=target_embed_pyramids[j],
+                feature_maps_batch=target_feature_pyramids[j],
                 voxel_indices_batch=target_masked_token_indices[j],
             )
-            target_embeds = F.normalize(target_embeds)
-
-            context_feature_pyramids = self.backbone(context_images[j], context_image_masks[j])
-            context_embed_pyramids = [self.projectors[j](context_feature_pyramids[j])
-                                      for j in range(self.num_scales)]
-            pred_embed_pyramids = [self.predictors[j](context_embed_pyramids[j], context_tokens_masks[j])
-                                   for j in range(self.num_scales)]
             pred_embeds = batched_take_features_from_map(
-                feature_maps_batch=pred_embed_pyramids[j],
+                feature_maps_batch=self.predictors[j](context_feature_pyramids[j], context_tokens_masks[j]),
                 voxel_indices_batch=context_masked_token_indices[j],
             )
-            pred_embeds = F.normalize(pred_embeds)
 
-            byol_loss_j = torch.mean(2 - 2 * torch.sum(pred_embeds * target_embeds, dim=1))
-            self.log(f'mim/byol_loss_at_scale_{j}', byol_loss_j, on_epoch=True, on_step=True)
+            bootstrapping_loss_j = F.smooth_l1_loss(pred_embeds, target_embeds)
+            self.log(f'mim/bootstapping_loss_at_scale_{j}', bootstrapping_loss_j, on_epoch=True, on_step=True)
 
-            loss += byol_loss_j
+            loss += bootstrapping_loss_j
 
         return loss
 

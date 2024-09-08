@@ -1,10 +1,8 @@
 _target_: vox2vec.pretrain.models.mim.MIM
 backbone: ${backbone}
-proj_hidden_factor: 4.0
-proj_out_dim: 128
-pred_hidden_factor: 1.0
-pred_depth: 3
-pred_kernel_size: 5
+pred_hidden_factor: 0.5
+pred_depth: 6
+pred_kernel_size: 3
 base_tau: 0.996
 final_tau: 1.0
 lr: 0.01
