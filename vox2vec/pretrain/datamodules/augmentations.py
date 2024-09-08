@@ -26,9 +26,11 @@ class ColorAugmentations:
 
 def augment_color(
         image: np.ndarray,
-        voxel_spacing: np.ndarray,
+        voxel_spacing: Sequence[float],
         color_augmentations: ColorAugmentations
 ) -> np.ndarray:
+    voxel_spacing = np.array(voxel_spacing, dtype='float32')
+
     if random.uniform(0, 1) < color_augmentations.blur_or_sharpen_p:
         if random.uniform(0, 1) < 0.5:
             # random gaussian blur in axial plane

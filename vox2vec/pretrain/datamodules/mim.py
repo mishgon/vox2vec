@@ -11,10 +11,11 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import lightning.pytorch as pl
 
-from vox2vec.utils.io import load_numpy
+from vox2vec.utils.io import load_numpy, load_json
 from vox2vec.utils.misc import get_random_sample
 from vox2vec.utils.box import get_random_box
 from vox2vec.typing import PreparedDataDirs, PretrainDataFractions
+from .augmentations import ColorAugmentations, augment_color
 
 
 class MIMDataModule(pl.LightningDataModule):
@@ -25,6 +26,7 @@ class MIMDataModule(pl.LightningDataModule):
             pretrain_data_fractions: PretrainDataFractions = PretrainDataFractions(),
             target_crop_size: Tuple[int, int, int] = (192, 192, 96),
             context_crop_size: Tuple[int, int, int] = (160, 160, 80),
+            color_augmentations: ColorAugmentations = ColorAugmentations(),
             token_size_per_scale: Sequence[Tuple[int, int, int]] = ((4, 4, 2), (8, 8, 4), (16, 16, 8), (32, 32, 16)),
             num_blocks_per_scale: Sequence[int] = (512, 64, 8, 1),
             max_block_aspect_ratio: float = 3 / 2,
@@ -42,6 +44,7 @@ class MIMDataModule(pl.LightningDataModule):
         self.pretrain_data_fractions = pretrain_data_fractions
         self.target_crop_size = tuple(target_crop_size)
         self.context_crop_size = tuple(context_crop_size)
+        self.color_augmentations = color_augmentations
         self.token_size_per_scale = list(map(tuple, token_size_per_scale))
         self.num_blocks_per_scale = list(num_blocks_per_scale)
         self.max_block_aspect_ratio = max_block_aspect_ratio
@@ -63,6 +66,7 @@ class MIMDataModule(pl.LightningDataModule):
             pretrain_data_fractions=self.pretrain_data_fractions,
             target_crop_size=self.target_crop_size,
             context_crop_size=self.context_crop_size,
+            color_augmentations=self.color_augmentations,
             token_size_per_scale=self.token_size_per_scale,
             num_blocks_per_scale=self.num_blocks_per_scale,
             max_block_aspect_ratio=self.max_block_aspect_ratio,
@@ -109,6 +113,7 @@ class _MIMDataset(Dataset):
             pretrain_data_fractions: PretrainDataFractions,
             target_crop_size: Tuple[int, int, int],
             context_crop_size: Tuple[int, int, int],
+            color_augmentations: ColorAugmentations,
             token_size_per_scale: Sequence[Tuple[int, int, int]],
             num_blocks_per_scale: Sequence[int],
             max_block_aspect_ratio: float,
@@ -120,6 +125,7 @@ class _MIMDataset(Dataset):
 
         self.target_crop_size = target_crop_size
         self.context_crop_size = context_crop_size
+        self.color_augmentations = color_augmentations
         self.token_size_per_scale = token_size_per_scale
         self.num_blocks_per_scale = num_blocks_per_scale
         self.max_block_aspect_ratio = max_block_aspect_ratio
@@ -150,14 +156,16 @@ class _MIMDataset(Dataset):
     def __getitem__(self, index: int):
         image_dirpath = random.choice(self.image_dirpaths)
         image = load_numpy(image_dirpath / 'image.npy.gz', decompress=True).astype('float32')
-        # voxel_spacing = load_json(image_dirpath / 'voxel_spacing.json')
+        voxel_spacing = load_json(image_dirpath / 'voxel_spacing.json')
         body_mask = load_numpy(image_dirpath / 'body_mask.npy.gz', decompress=True)
 
         return _get_targets_and_contexts(
             image=image,
+            voxel_spacing=voxel_spacing,
             body_mask=body_mask,
             target_crop_size=self.target_crop_size,
             context_crop_size=self.context_crop_size,
+            color_augmentations=self.color_augmentations,
             token_size_per_scale=self.token_size_per_scale,
             num_blocks_per_scale=self.num_blocks_per_scale,
             max_block_aspect_ratio=self.max_block_aspect_ratio,
@@ -167,9 +175,11 @@ class _MIMDataset(Dataset):
 
 def _get_targets_and_contexts(
         image: np.ndarray,
+        voxel_spacing: Tuple[int, int, int],
         body_mask: np.ndarray,
         target_crop_size: Tuple[int, int, int],
         context_crop_size: Tuple[int, int, int],
+        color_augmentations: ColorAugmentations,
         token_size_per_scale: Sequence[Tuple[int, int, int]],
         num_blocks_per_scale: Sequence[int],
         max_block_aspect_ratio: float,
@@ -181,6 +191,7 @@ def _get_targets_and_contexts(
 
     tgt_box = get_random_box(img_size, tgt_size)
     tgt_img = crop_to_box(image, tgt_box)
+    tgt_img = augment_color(tgt_img, voxel_spacing, color_augmentations)
     tgt_img = np.expand_dims(tgt_img, axis=0)  # add channel dim
 
     tgt_img_msks, tgt_msk_tkn_idxs, cxt_imgs, cxt_img_msks, cxt_tkn_msks, cxt_msk_tkn_idxs = [], [], [], [], [], []
@@ -190,6 +201,7 @@ def _get_targets_and_contexts(
 
         cxt_box = tgt_box[0] + get_random_box(tgt_size // tkn_size, cxt_size // tkn_size) * tkn_size
         cxt_img = crop_to_box(image, cxt_box)
+        cxt_img = augment_color(cxt_img, voxel_spacing, color_augmentations)
         cxt_img = np.expand_dims(cxt_img, axis=0)  # add channel dim
         cxt_body_msk = crop_to_box(body_mask, cxt_box)
         cxt_img_msk, cxt_tkn_msk, _cxt_msk_tkn_idxs = _get_context_mask(

@@ -1,5 +1,6 @@
 defaults:
   - pretrain_data_fractions: default
+  - color_augmentations: default
 
 _target_: vox2vec.pretrain.datamodules.mim.MIMDataModule
 prepared_data_dirs: ${paths.prepared_data_dirs}
