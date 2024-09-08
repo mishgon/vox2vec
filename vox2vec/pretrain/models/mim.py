@@ -26,11 +26,11 @@ class Projector(nn.Module):
         hidden_dim = int(embed_dim * hidden_factor)
         self.layers = nn.Sequential(
             nn.Conv3d(embed_dim, hidden_dim, kernel_size=1),
-            nn.BatchNorm3d(hidden_dim),
-            nn.ReLU(inplace=True),
+            LayerNorm3d(hidden_dim),  # nn.BatchNorm3d(hidden_dim),
+            nn.GELU(),  # nn.ReLU(inplace=True),
             nn.Conv3d(hidden_dim, hidden_dim, kernel_size=1),
-            nn.BatchNorm3d(hidden_dim),
-            nn.ReLU(inplace=True),
+            LayerNorm3d(hidden_dim),  # nn.BatchNorm3d(hidden_dim),
+            nn.GELU(),  # nn.ReLU(inplace=True),
             nn.Conv3d(hidden_dim, out_dim, kernel_size=1, bias=False),
         )
 
