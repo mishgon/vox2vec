@@ -21,7 +21,8 @@ class MoCo(pl.LightningModule):
             pred_hidden_dim: int = 512,
             temp: float = 0.1,
             queue_size: int = 65_536,
-            tau: float = 0.999,
+            base_tau: float = 0.99,
+            final_tau: float = 1.0,
             lr: float = 3e-4,
             weight_decay: float = 1e-6,
             warmup_steps: Optional[int] = None,
@@ -55,7 +56,7 @@ class MoCo(pl.LightningModule):
         self.momentum_projector = deepcopy(self.projector)
         for param in self.momentum_projector.parameters():
             param.requires_grad = False
-        self.momentum_updater = MomentumUpdater(tau)
+        self.momentum_updater = MomentumUpdater(base_tau, final_tau)
 
         self.register_buffer('target_embeds_queue', torch.randn(queue_size, proj_out_dim))
         self.target_embeds_queue = F.normalize(self.target_embeds_queue)
@@ -117,12 +118,12 @@ class MoCo(pl.LightningModule):
             self.momentum_updater.update(self.backbone, self.momentum_backbone)
             self.momentum_updater.update(self.projector, self.momentum_projector)
             # log tau momentum
-            # self.log("tau", self.momentum_updater.cur_tau)
+            self.log("tau", self.momentum_updater.cur_tau)
             # update tau
-            # self.momentum_updater.update_tau(
-            #     cur_step=self.trainer.global_step,
-            #     max_steps=self.trainer.estimated_stepping_batches,
-            # )
+            self.momentum_updater.update_tau(
+                cur_step=self.trainer.global_step,
+                max_steps=self.trainer.estimated_stepping_batches,
+            )
         self.last_step = self.trainer.global_step
 
     def validation_step(self, batch, batch_idx):
