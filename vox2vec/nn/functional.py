@@ -155,8 +155,8 @@ def take_features_from_pyramid(
 
     features = []
     for i, x in enumerate(feature_pyramid):
-        stride = tuple(s * 2 ** i for s in stride)
-        features.append(take_features_from_map(x, voxel_indices, stride, mode))
+        stride_i = tuple(s * 2 ** i for s in stride)
+        features.append(take_features_from_map(x, voxel_indices, stride_i, mode))
 
     return torch.cat(features, dim=-1)
 
