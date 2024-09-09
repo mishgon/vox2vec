@@ -149,10 +149,13 @@ def take_features_from_pyramid(
     Returns:
         torch.Tensor: tensor of shape ``(n, \sum_i c_i)``
     """
-    stride = torch.tensor(stride).to(voxel_indices)
+    if isinstance(stride, int):
+        stride = (stride, stride, stride)
+    assert isinstance(stride, tuple)
+
     features = []
     for i, x in enumerate(feature_pyramid):
-        stride = stride * 2 ** i
+        stride = tuple(s * 2 ** i for s in stride)
         features.append(take_features_from_map(x, voxel_indices, stride, mode))
 
     return torch.cat(features, dim=-1)
