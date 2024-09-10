@@ -7,7 +7,7 @@ temp: 0.1
 queue_size: 1_048_576
 base_tau: 0.99
 final_tau: 1.0
-lr: 0.0003
+lr: 0.00001
 weight_decay: 0.000001
 warmup_steps: 10_000
 total_steps: ${trainer.max_steps}
