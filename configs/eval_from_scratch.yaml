@@ -18,4 +18,4 @@ eval_model:
 
 ckpt_path: null
 
-logs_group: pretrain/moco
+logs_group: eval/from_scratch
