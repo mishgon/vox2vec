@@ -1,0 +1,21 @@
+defaults:
+  - eval_datamodule: lidc
+  - backbone: fpn
+  - heads/fpn_nonlinear
+  - eval_model: multilabel_segmentation
+  - trainer: default
+  - paths: default
+  - hydra: default
+  - _self_
+
+
+heads:
+  nonlinear:
+    out_channels: 1
+
+eval_model:
+  head: ${heads.fpn_nonlinear}
+
+ckpt_path: null
+
+logs_group: pretrain/moco

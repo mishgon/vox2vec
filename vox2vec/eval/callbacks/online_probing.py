@@ -7,9 +7,9 @@ import lightning.pytorch as pl
 from monai.inferers import sliding_window_inference
 
 from vox2vec.nn.functional import (
-    eval_mode, binary_dice_loss, segmentation_bce_loss, binary_soft_dice_score
+    eval_mode, binary_dice_loss, segmentation_bce_loss, binary_dice_score
 )
-from .visualize import draw
+from ..visualize import draw
 
 
 class OnlineProbing(pl.Callback):
@@ -27,11 +27,11 @@ class OnlineProbing(pl.Callback):
         super().__init__()
 
         self.heads = nn.ModuleList(heads)
-        self.weight_decay = weight_decay
-        self.lr = lr
-        self.gradient_clip_val = gradient_clip_val
         self.crop_size = crop_size
         self.sw_batch_size = sw_batch_size
+        self.lr = lr
+        self.weight_decay = weight_decay
+        self.gradient_clip_val = gradient_clip_val
         self.backbone_warmup_epochs = backbone_warmup_epochs
         self.draw_n_first_val_examples = draw_n_first_val_examples
 
@@ -66,7 +66,7 @@ class OnlineProbing(pl.Callback):
             positive = gt_masks.flatten(1, -1).any(1)
             if positive.any():
                 dice_loss = binary_dice_loss(pred_probs[positive], gt_masks[positive], roi_masks[positive])
-                pl_module.log(f'online_probing/head_{i}_dice_loss', bce_loss, on_epoch=True, on_step=True)
+                pl_module.log(f'online_probing/head_{i}_dice_loss', dice_loss, on_epoch=True, on_step=True)
             else:
                 dice_loss = 0.0
 
@@ -87,23 +87,26 @@ class OnlineProbing(pl.Callback):
             def predictor(x):
                 return torch.sigmoid(head(x, pl_module.forward(x)))
 
-            pred_probs = sliding_window_inference(
+            pred_prob = sliding_window_inference(
                 inputs=image.unsqueeze(0),
                 roi_size=self.crop_size,
                 sw_batch_size=self.sw_batch_size,
                 predictor=predictor,
-                sw_device=pl_module.device,
-                device='cpu',
                 overlap=0.5,
                 mode='gaussian',
+                sw_device=pl_module.device,
+                device='cpu',
             ).squeeze(0)
-            pred_probs *= roi_mask
-            pred_mask = pred_probs > 0.5
+            pred_prob *= roi_mask
+            pred_mask = pred_prob > 0.5
 
-            dice_scores = binary_soft_dice_score(pred_probs, gt_mask)
-            for j in range(len(dice_scores)):
+            soft_dice_scores = binary_dice_score(pred_prob, gt_mask)
+            dice_scores = binary_dice_score(pred_mask, gt_mask)
+            for j in range(len(soft_dice_scores)):
+                pl_module.log(f'online_probing/head_{i}_soft_dice_score_for_cls_{j}', soft_dice_scores[j].item(), on_epoch=True)
                 pl_module.log(f'online_probing/head_{i}_dice_score_for_cls_{j}', dice_scores[j].item(), on_epoch=True)
-            if len(dice_scores) > 1:
+            if len(soft_dice_scores) > 1:
+                pl_module.log(f'online_probing/head_{i}_avg_soft_dice_score', soft_dice_scores.mean().item(), on_epoch=True)
                 pl_module.log(f'online_probing/head_{i}_avg_dice_score', dice_scores.mean().item(), on_epoch=True)
 
             if batch_idx < self.draw_n_first_val_examples:

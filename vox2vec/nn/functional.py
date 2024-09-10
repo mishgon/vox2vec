@@ -72,13 +72,13 @@ def segmentation_bce_loss(
     return F.binary_cross_entropy_with_logits(pred_logits, gt_masks)
 
 
-def binary_soft_dice_score(
-        pred_probs: torch.Tensor,
+def binary_dice_score(
+        pred_probs_or_masks: torch.Tensor,
         gt_masks: torch.Tensor,
         reduction: Literal['mean', 'none'] = 'none'
 ) -> torch.Tensor:
-    intersection = torch.sum(pred_probs * gt_masks, dim=(-3, -2, -1))
-    volumes_sum = torch.sum(pred_probs ** 2 + gt_masks ** 2, dim=(-3, -2, -1))
+    intersection = torch.sum(pred_probs_or_masks * gt_masks, dim=(-3, -2, -1))
+    volumes_sum = torch.sum(pred_probs_or_masks ** 2 + gt_masks ** 2, dim=(-3, -2, -1))
     eps = 1e-5
     dice_scores = (2 * intersection + eps) / (volumes_sum + eps)
     if reduction == 'mean':

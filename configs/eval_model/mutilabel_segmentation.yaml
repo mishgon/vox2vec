@@ -1,0 +1,10 @@
+_target_: vox2vec.eval.models.multilabel_segmentation.MultilabelSegmentation
+backbone: ${backbone}
+head: ???
+crop_size: ${eval_datamodule.crop_size}
+sw_batch_size: ${eval_datamodule.batch_size}
+lr: 0.0003
+weight_decay: 0.000001
+warmup_steps: null
+total_steps: null
+draw_n_first_val_examples: 10

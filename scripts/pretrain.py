@@ -1,4 +1,3 @@
-from typing import List
 from omegaconf import DictConfig
 import hydra
 
