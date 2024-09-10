@@ -3,7 +3,7 @@ backbone: ${backbone}
 proj_hidden_dim: 2048
 proj_out_dim: 128
 temp: 0.1
-lr: 0.00001
+lr: 0.0001
 weight_decay: 0.000001
 warmup_steps: 10_000
 total_steps: ${trainer.max_steps}
