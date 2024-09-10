@@ -14,7 +14,7 @@ heads:
     out_channels: 1
 
 eval_model:
-  head: ${heads.fpn_nonlinear}
+  head: ${heads.nonlinear}
 
 ckpt_path: null
 

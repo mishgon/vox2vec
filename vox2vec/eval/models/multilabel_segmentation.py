@@ -91,7 +91,7 @@ class MultilabelSegmentation(pl.LightningModule):
         if batch_idx < self.draw_n_first_val_examples:
             log_image = draw(image, gt_mask, pred_mask)
             self.logger.experiment.add_image(
-                f'val/head_{i}_image_{batch_idx}',
+                f'multilabel_segmentation/image_{batch_idx}',
                 log_image, self.current_epoch
             )
 
