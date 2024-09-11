@@ -1,0 +1,26 @@
+defaults:
+  - pretrain_datamodule: simclr
+  - backbone: fpn_base
+  - heads/fpn_linear
+  - heads/fpn_nonlinear
+  - pretrain_model: unbiased_vicreg
+  - trainer: default
+  - paths: default
+  - hydra: default
+  - _self_
+
+
+heads:
+  linear:
+    out_channels: 1
+  nonlinear:
+    out_channels: 1
+
+online_probing:
+  crop_size: [128, 128, 64]
+  batch_size: 4
+  num_workers: 4
+
+ckpt_path: null
+
+logs_group: pretrain/unbiased_vicreg
