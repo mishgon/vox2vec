@@ -14,10 +14,10 @@ class SimCLR(pl.LightningModule):
     def __init__(
             self,
             backbone: FPN3d,
-            proj_hidden_dim: int = 512,
+            proj_hidden_dim: int = 2048,
             proj_out_dim: int = 128,
             temp: float = 0.1,
-            lr: float = 3e-4,
+            lr: float = 0.001,
             weight_decay: float = 1e-6,
             warmup_steps: Optional[int] = None,
             total_steps: Optional[int] = None,
