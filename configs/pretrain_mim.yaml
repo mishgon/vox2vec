@@ -1,6 +1,6 @@
 defaults:
   - pretrain_datamodule: mim
-  - backbone: fpn
+  - backbone: fpn_base
   - heads/fpn_linear
   - heads/fpn_nonlinear
   - pretrain_model: mim
