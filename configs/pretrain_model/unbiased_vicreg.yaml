@@ -1,4 +1,4 @@
-_target_: vox2vec.pretrain.models.vicreg.UnbiasedVICReg
+_target_: vox2vec.pretrain.models.unbiased_vicreg.UnbiasedVICReg
 backbone: ${backbone}
 proj_hidden_dim: 8192
 proj_out_dim: 8192
