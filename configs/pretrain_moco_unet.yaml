@@ -11,13 +11,13 @@ defaults:
 
 
 pretrain_datamodule:
-  pretrain_data_fractions:
-    nlst: 1.0
-    amos_ct_labeled_train: 0.0
-    amos_ct_unlabeled_train: 0.0
-    abdomen_atlas: 0.0
-    flare23_labeled_train: 0.0
-    flare23_unlabeled_train: 0.0
+  # pretrain_data_fractions:
+  #   nlst: 1.0
+  #   amos_ct_labeled_train: 0.0
+  #   amos_ct_unlabeled_train: 0.0
+  #   abdomen_atlas: 0.0
+  #   flare23_labeled_train: 0.0
+  #   flare23_unlabeled_train: 0.0
   batch_size: 4
   num_workers: 8
 
