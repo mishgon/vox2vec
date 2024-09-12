@@ -20,6 +20,7 @@ class MoCoUNet(pl.LightningModule):
             pred_hidden_dim: int = 512,
             temp: float = 0.1,
             queue_size: int = 1_048_576,
+            mask_targets: bool = False,
             tau: float = 0.999,
             lr: float = 0.01,
             weight_decay: float = 1e-6,
@@ -60,6 +61,7 @@ class MoCoUNet(pl.LightningModule):
         self.target_embeds_queue = F.normalize(self.target_embeds_queue)
 
         self.temp = temp
+        self.mask_targets = mask_targets
         self.lr = lr
         self.weight_decay = weight_decay
         self.warmup_steps = warmup_steps
@@ -76,9 +78,11 @@ class MoCoUNet(pl.LightningModule):
 
         (target_images_batch, target_masks_batch, target_voxel_indices_batch,
          context_images_batch, context_masks_batch, context_voxel_indices_batch) = batch
+        if not self.mask_targets:
+            target_masks_batch = None
 
         with torch.no_grad():
-            target_feature_maps_batch = self.momentum_backbone(target_images_batch)
+            target_feature_maps_batch = self.momentum_backbone(target_images_batch, target_masks_batch)
             target_features = batched_take_features_from_map(
                 target_feature_maps_batch,
                 target_voxel_indices_batch,

@@ -5,6 +5,7 @@ proj_out_dim: 128
 pred_hidden_dim: 512
 temp: 0.1
 queue_size: 262144
+mask_targets: false
 tau: 0.999
 lr: 0.01
 weight_decay: 0.000001
