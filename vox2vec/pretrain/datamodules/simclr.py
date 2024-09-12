@@ -117,6 +117,8 @@ class _SimCLRDataset(Dataset):
     ) -> None:
         super().__init__()
 
+        random.seed(random_seed)
+
         self.spatial_augmentations = spatial_augmentations
         self.color_augmentations = color_augmentations
         self.masking = masking
@@ -125,7 +127,6 @@ class _SimCLRDataset(Dataset):
 
         nlst_image_dirpaths, _ = train_test_split(list(Path(prepared_data_dirs.nlst).iterdir()),
                                                   test_size=nlst_val_size, random_state=random_seed)
-        random.seed(random_seed)
         self.image_dirpaths = (
             get_random_sample(population=nlst_image_dirpaths,
                               size=pretrain_data_fractions.nlst)
