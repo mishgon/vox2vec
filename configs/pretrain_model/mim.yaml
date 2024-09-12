@@ -3,7 +3,7 @@ backbone: ${backbone}
 pred_hidden_factor: 0.5
 pred_depth: 6
 pred_kernel_size: 3
-base_tau: 0.996
+base_tau: 0.99
 final_tau: 1.0
 lr: 0.01
 weight_decay: 0.000001
