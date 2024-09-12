@@ -48,9 +48,5 @@ class Vox2VecForScreener(nn.Module):
         )
         self.load_state_dict(torch.load(weights_path))
 
-        for param in self.parameters():
-            param.requires_grad = False
-
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
-        with torch.no_grad(), eval_mode(self.backbone):
-            return self.backbone(x)
+        return self.backbone(x)
