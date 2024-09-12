@@ -33,7 +33,7 @@ Homepage = "https://github.com/mishgon/vox2vec"
 Issues = "https://github.com/mishgon/vox2vec/issues"
 
 [tool.setuptools.packages.find]
-where = ["vox2vec"]
+include = ["vox2vec"]
 namespaces = false
 
 [tool.setuptools.dynamic]
