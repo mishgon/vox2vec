@@ -134,20 +134,20 @@ class _MIMDataset(Dataset):
         self.mask_ratio_range = mask_ratio_range
         self.num_images_per_epoch = num_images_per_epoch
 
-        nlst_image_dirpaths, _ = train_test_split(list(Path(prepared_data_dirs.nlst).iterdir()),
+        nlst_image_dirpaths, _ = train_test_split(sorted(Path(prepared_data_dirs.nlst).iterdir()),
                                                   test_size=nlst_val_size, random_state=random_seed)
         self.image_dirpaths = (
             get_random_sample(population=nlst_image_dirpaths,
                               size=pretrain_data_fractions.nlst)
-            + get_random_sample(population=list(Path(prepared_data_dirs.amos_ct_labeled_train).iterdir()),
+            + get_random_sample(population=sorted(Path(prepared_data_dirs.amos_ct_labeled_train).iterdir()),
                                 size=pretrain_data_fractions.amos_ct_labeled_train)
-            + get_random_sample(population=list(Path(prepared_data_dirs.amos_ct_unlabeled_train).iterdir()),
+            + get_random_sample(population=sorted(Path(prepared_data_dirs.amos_ct_unlabeled_train).iterdir()),
                                 size=pretrain_data_fractions.amos_ct_unlabeled_train)
-            + get_random_sample(population=list(Path(prepared_data_dirs.abdomen_atlas).iterdir()),
+            + get_random_sample(population=sorted(Path(prepared_data_dirs.abdomen_atlas).iterdir()),
                                 size=pretrain_data_fractions.abdomen_atlas)
-            + get_random_sample(population=list(Path(prepared_data_dirs.flare23_labeled_train).iterdir()),
+            + get_random_sample(population=sorted(Path(prepared_data_dirs.flare23_labeled_train).iterdir()),
                                 size=pretrain_data_fractions.flare23_labeled_train)
-            + get_random_sample(population=list(Path(prepared_data_dirs.flare23_unlabeled_train).iterdir()),
+            + get_random_sample(population=sorted(Path(prepared_data_dirs.flare23_unlabeled_train).iterdir()),
                                 size=pretrain_data_fractions.flare23_unlabeled_train)
         )
 
