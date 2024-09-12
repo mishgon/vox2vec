@@ -19,6 +19,7 @@ pretrain_datamodule:
     flare23_labeled_train: 0.0
     flare23_unlabeled_train: 0.0
   batch_size: 4
+  num_workers: 8
 
 backbone:
   final_ln: false
