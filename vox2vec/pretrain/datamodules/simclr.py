@@ -136,10 +136,10 @@ class _SimCLRDataset(Dataset):
                                 size=pretrain_data_fractions.amos_ct_unlabeled_train)
             + get_random_sample(population=sorted(Path(prepared_data_dirs.abdomen_atlas).iterdir()),
                                 size=pretrain_data_fractions.abdomen_atlas)
-            + get_random_sample(population=sorted(Path(prepared_data_dirs.flare23_labeled_train).iterdir()),
-                                size=pretrain_data_fractions.flare23_labeled_train)
-            + get_random_sample(population=sorted(Path(prepared_data_dirs.flare23_unlabeled_train).iterdir()),
-                                size=pretrain_data_fractions.flare23_unlabeled_train)
+            # + get_random_sample(population=sorted(Path(prepared_data_dirs.flare23_labeled_train).iterdir()),
+            #                     size=pretrain_data_fractions.flare23_labeled_train)
+            # + get_random_sample(population=sorted(Path(prepared_data_dirs.flare23_unlabeled_train).iterdir()),
+            #                     size=pretrain_data_fractions.flare23_unlabeled_train)
         )
 
     def __len__(self):
