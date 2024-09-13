@@ -17,7 +17,7 @@ class SimCLR(pl.LightningModule):
             proj_hidden_dim: int = 2048,
             proj_out_dim: int = 128,
             temp: float = 0.1,
-            lr: float = 0.001,
+            lr: float = 0.01,
             weight_decay: float = 1e-6,
             warmup_steps: Optional[int] = None,
             total_steps: Optional[int] = None,

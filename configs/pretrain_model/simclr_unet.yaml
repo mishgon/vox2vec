@@ -1,6 +1,6 @@
 _target_: vox2vec.pretrain.models.simclr_unet.SimCLRUNet
 backbone: ${backbone}
-proj_hidden_dim: 512
+proj_hidden_dim: 2048
 proj_out_dim: 128
 temp: 0.1
 lr: 0.01

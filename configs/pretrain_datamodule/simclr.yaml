@@ -6,15 +6,15 @@ _target_: vox2vec.pretrain.datamodules.simclr.SimCLRDataModule
 prepared_data_dirs: ${paths.prepared_data_dirs}
 nlst_val_size: 1000
 spatial_augmentations:
-  min_voxel_spacing: [1.0, 1.0, 2.0]
-  max_voxel_spacing: [2.0, 2.0, 4.0]
-  crop_size: [128, 128, 64]
+  min_voxel_spacing: [1.0, 1.0, 1.5]
+  max_voxel_spacing: [2.0, 2.0, 3.0]
+  crop_size: [96, 96, 64]
 masking:
   p: 0.0
   ratio: 0.6
   block_size: [16, 16, 8]
-num_voxels_per_crop: 512
-batch_size: 16
+num_voxels_per_crop: 1024
+batch_size: 8
 num_batches_per_epoch: 3000
-num_workers: 16
+num_workers: 8
 random_seed: 42

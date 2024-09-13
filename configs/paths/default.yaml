@@ -6,6 +6,8 @@ source_data_dirs:
   flare23: /home/jovyan/misha/data/flare23
   lidc: /home/jovyan/misha/data/lidc
   midrc_ricord_1a: /home/jovyan/misha/data/midrc_ricord_1a
+  kits21: /home/jovyan/misha/data/kits21
+  lits: /home/jovyan/misha/data/lits
 
 # paths to the preprocessed data
 prepared_data_dirs:
@@ -19,6 +21,8 @@ prepared_data_dirs:
   flare23_labeled_val: /home/jovyan/misha/prep_data/flare23_labeled_val
   lidc: /home/jovyan/misha/prep_data/lidc
   midrc_ricord_1a: /home/jovyan/misha/prep_data/midrc_ricord_1a
+  kits21: /home/jovyan/misha/prep_data/kits21
+  lits: /home/jovyan/misha/prep_data/lits
 
 # under this path all experiments' logs are saved
 logs_dir: /home/jovyan/misha/experiments/vox2vec_public

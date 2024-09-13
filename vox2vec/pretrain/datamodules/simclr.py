@@ -19,16 +19,16 @@ from .augmentations import ColorAugmentations, augment_color
 
 @dataclass
 class SimCLRSpatialAugmentations:
-    min_voxel_spacing: Tuple[float, float, float] = (1.0, 1.0, 2.0)
-    max_voxel_spacing: Tuple[float, float, float] = (2.0, 2.0, 4.0)
-    crop_size: Tuple[int, int, int] = (128, 128, 64)
+    min_voxel_spacing: Tuple[float, float, float] = (1.0, 1.0, 1.5)
+    max_voxel_spacing: Tuple[float, float, float] = (2.0, 2.0, 3.0)
+    crop_size: Tuple[int, int, int] = (96, 96, 64)
 
 
 @dataclass
 class SimCLRMasking:
     p: float = 0.0
     ratio: float = 0.6
-    block_size: Tuple[int, int, int] = (16, 16, 8)
+    block_size: Tuple[int, int, int] = (24, 24, 16)
 
 
 class SimCLRDataModule(pl.LightningDataModule):
@@ -40,7 +40,7 @@ class SimCLRDataModule(pl.LightningDataModule):
             spatial_augmentations: SimCLRSpatialAugmentations = SimCLRSpatialAugmentations(),
             color_augmentations: ColorAugmentations = ColorAugmentations(),
             masking: SimCLRMasking = SimCLRMasking(),
-            num_voxels_per_crop: int = 512,
+            num_voxels_per_crop: int = 1024,
             batch_size: int = 8,  # num images per batch
             num_batches_per_epoch: int = 3000,
             num_workers: int = 0,

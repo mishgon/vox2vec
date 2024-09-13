@@ -2,12 +2,13 @@ _target_: vox2vec.nn.unet_3d.UNet3d
 in_channels: 1
 stem_stride: 1
 out_channels: 32
-fpn_out_channels: [32, 64, 128, 256]
+fpn_out_channels: [16, 64, 256, 1024]
+fpn_hidden_factors: [1.0, 1.0, 4.0, 4.0]
 fpn_depths: [[1, 1], [2, 1], [4, 1], 8]
 stem_kernel_size: 7
 stem_padding: 3
 drop_path_rate: 0.0
-final_ln: true
+final_ln: false
 final_affine: false
 final_gelu: false
 mask_token: true

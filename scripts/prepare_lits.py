@@ -1,17 +1,23 @@
 from pathlib import Path
 from omegaconf import DictConfig
 import hydra
+import gzip
 import nibabel
 
 from vox2vec.preprocessing.nifty import affine_to_voxel_spacing, to_canonical_orientation
 from vox2vec.preprocessing.common import preprocess, Data
-from vox2vec.utils.misc import ProgressParallel, is_diagonal
 from vox2vec.utils.io import save_numpy, save_json
+from vox2vec.utils.misc import ProgressParallel, is_diagonal
 
 
 def prepare_id(i: str, config: DictConfig) -> None:
-    # load image and affine
-    image_filepath = Path(config.paths.source_data_dirs.abdomen_atlas) / 'uncompressed' / i / 'ct.nii.gz'
+    src_dirpath = Path(config.paths.source_data_dirs.lits)
+    image_filepath, = src_dirpath.glob(f'**/volume-{i}.nii')
+    try:
+        mask_filepath, = src_dirpath.glob(f'**/segmentation-{i}.nii')
+    except ValueError:
+        return
+
     image_nii = nibabel.load(image_filepath)
     image_nii = nibabel.as_closest_canonical(image_nii)
     affine = image_nii.affine
@@ -19,8 +25,6 @@ def prepare_id(i: str, config: DictConfig) -> None:
         return
     image = image_nii.get_fdata()
 
-    # load mask and mask affine
-    mask_filepath = Path(config.paths.source_data_dirs.abdomen_atlas) / 'uncompressed' / i / 'combined_labels.nii.gz'
     mask_nii = nibabel.load(mask_filepath)
     mask_nii = nibabel.as_closest_canonical(mask_nii)
     mask_affine = mask_nii.affine
@@ -31,7 +35,7 @@ def prepare_id(i: str, config: DictConfig) -> None:
     # compute voxel spacing
     voxel_spacing = affine_to_voxel_spacing(affine)
 
-    # to dicom canonical orientation
+    # to canonical orientation
     image, voxel_spacing = to_canonical_orientation(image, voxel_spacing, affine)
     mask, _ = to_canonical_orientation(mask, None, mask_affine)
 
@@ -52,7 +56,7 @@ def prepare_id(i: str, config: DictConfig) -> None:
     if any(image.shape[i] < config.min_image_size[i] for i in range(3)):
         return
 
-    save_dirpath = Path(config.paths.prepared_data_dirs.abdomen_atlas) / i
+    save_dirpath = Path(config.paths.prepared_data_dirs.lits) / i
     save_dirpath.mkdir(parents=True)
     save_numpy(image.astype('float16'), save_dirpath / 'image.npy.gz', compression=1, timestamp=0)
     save_json(voxel_spacing, save_dirpath / 'voxel_spacing.json')
@@ -63,12 +67,13 @@ def prepare_id(i: str, config: DictConfig) -> None:
 
 @hydra.main(version_base=None, config_path='../configs', config_name='prepare_data')
 def main(config: DictConfig):
-    ids = [path.name for path in Path(config.paths.source_data_dirs.abdomen_atlas).glob('uncompressed/BDMAP_*')]
+    ids = [p.name[len('volume-'):-len('.nii')]
+           for p in Path(config.paths.source_data_dirs.lits).glob('**/volume-*.nii')]
 
-    ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(ids), desc='Preparing AbdomenAtlas')(
+    ProgressParallel(n_jobs=config.num_workers, backend='loky', total=len(ids), desc='Preparing LiTS')(
         (prepare_id, [i, config], {}) for i in ids
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

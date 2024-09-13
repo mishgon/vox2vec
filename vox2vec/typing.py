@@ -3,16 +3,6 @@ from typing import Union
 
 
 @dataclass
-class SourceDataDirs:
-    nlst: str
-    amos: str
-    abdomen_atlas: str
-    flare23: str
-    lidc: str
-    midrc_ricord_1a: str
-
-
-@dataclass
 class PreparedDataDirs:
     nlst: str
     amos_ct_labeled_train: str
@@ -24,6 +14,8 @@ class PreparedDataDirs:
     flare23_labeled_val: str
     lidc: str
     midrc_ricord_1a: str
+    kits21: str
+    lits: str
 
 
 @dataclass

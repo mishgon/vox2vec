@@ -13,7 +13,7 @@ class SimCLRUNet(pl.LightningModule):
     def __init__(
             self,
             backbone: UNet3d,
-            proj_hidden_dim: int = 512,
+            proj_hidden_dim: int = 2048,
             proj_out_dim: int = 128,
             temp: float = 0.1,
             lr: float = 0.01,

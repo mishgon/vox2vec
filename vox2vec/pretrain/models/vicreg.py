@@ -19,7 +19,7 @@ class VICReg(pl.LightningModule):
             i_weight: float = 25.0,
             v_weight: float = 25.0,
             c_weight: float = 1.0,
-            lr: float = 0.001,
+            lr: float = 0.01,
             weight_decay: float = 1e-6,
             warmup_steps: Optional[int] = None,
             total_steps: Optional[int] = None,
