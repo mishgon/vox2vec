@@ -60,7 +60,7 @@ class SimCLRUNet(pl.LightningModule):
         return embeds
 
     def training_step(self, batch, batch_idx):
-        batch = batch['pretrain']
+        # batch = batch['pretrain']
 
         (images_batch_1, masks_batch_1, voxel_indices_batch_1,
          images_batch_2, masks_batch_2, voxel_indices_batch_2) = batch

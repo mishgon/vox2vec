@@ -74,7 +74,7 @@ class MoCoUNet(pl.LightningModule):
         self.last_step = 0
 
     def training_step(self, batch, batch_idx):
-        batch = batch['pretrain']
+        # batch = batch['pretrain']
 
         (target_images_batch, target_masks_batch, target_voxel_indices_batch,
          context_images_batch, context_masks_batch, context_voxel_indices_batch) = batch
