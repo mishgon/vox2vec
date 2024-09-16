@@ -16,13 +16,13 @@ class Vox2VecForScreener(nn.Module):
             name: Literal[
                 'simclr_dim32_nlst',
                 'simclr_dim32_all',
-                'simclr_dim32_nlst_lr0.01',
-                'simclr_dim32_nlst_lr0.01_ln',
+                # 'simclr_dim32_0.1nlst',
+                # 'simclr_dim32_0.01nlst',
                 'moco_dim32_nlst',
-                'simclr_dim128_nlst',
+                # 'simclr_dim128_nlst',
                 'simclr_masked_dim32_all'
             ],
-            # revision: str = 
+            revision: str = 'f8008d46426a284132dabbbd1bfe79841f3339f2'
     ):
         super().__init__()
 
@@ -43,12 +43,12 @@ class Vox2VecForScreener(nn.Module):
         )
         self.name = name
 
-        # weights_path = hf_hub_download(
-        #     repo_id='mishgon/vox2vec',
-        #     filename=f'{name}.pt',
-        #     revision=revision
-        # )
-        # self.load_state_dict(torch.load(weights_path))
+        weights_path = hf_hub_download(
+            repo_id='mishgon/vox2vec',
+            filename=f'{name}.pt',
+            revision=revision
+        )
+        self.load_state_dict(torch.load(weights_path))
 
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
         return self.backbone(x)
