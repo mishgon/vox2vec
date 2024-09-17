@@ -11,7 +11,7 @@ source_data_dirs:
 
 # paths to the preprocessed data
 prepared_data_dirs:
-  nlst: /home/jovyan/misha/prep_data/nlst
+  nlst: /home/jovyan/misha/prep_data/vox2vec/nlst
   amos_ct_labeled_train: /home/jovyan/misha/prep_data/vox2vec/amos_ct_labeled_train
   amos_ct_unlabeled_train: /home/jovyan/misha/prep_data/vox2vec/amos_ct_unlabeled_train
   amos_ct_val: /home/jovyan/misha/prep_data/vox2vec/amos_ct_val
