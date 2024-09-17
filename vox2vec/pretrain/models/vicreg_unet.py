@@ -61,7 +61,7 @@ class VICRegUNet(pl.LightningModule):
             stride=self.backbone.stem_stride,
             mode='trilinear'
         )
-        embeds = F.normalize(self.projector(features))
+        embeds = self.projector(features)
         return embeds
 
     def training_step(self, batch, batch_idx):
