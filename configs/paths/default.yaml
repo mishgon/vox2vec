@@ -12,17 +12,17 @@ source_data_dirs:
 # paths to the preprocessed data
 prepared_data_dirs:
   nlst: /home/jovyan/misha/prep_data/nlst
-  amos_ct_labeled_train: /home/jovyan/misha/prep_data/amos_ct_labeled_train
-  amos_ct_unlabeled_train: /home/jovyan/misha/prep_data/amos_ct_unlabeled_train
-  amos_ct_val: /home/jovyan/misha/prep_data/amos_ct_val
-  abdomen_atlas: /home/jovyan/misha/prep_data/abdomen_atlas_1.0_mini
-  flare23_labeled_train: /home/jovyan/misha/prep_data/flare23_labeled_train
-  flare23_unlabeled_train: /home/jovyan/misha/prep_data/flare23_unlabeled_train
-  flare23_labeled_val: /home/jovyan/misha/prep_data/flare23_labeled_val
-  lidc: /home/jovyan/misha/prep_data/lidc
-  midrc_ricord_1a: /home/jovyan/misha/prep_data/midrc_ricord_1a
-  kits21: /home/jovyan/misha/prep_data/kits21
-  lits: /home/jovyan/misha/prep_data/lits
+  amos_ct_labeled_train: /home/jovyan/misha/prep_data/vox2vec/amos_ct_labeled_train
+  amos_ct_unlabeled_train: /home/jovyan/misha/prep_data/vox2vec/amos_ct_unlabeled_train
+  amos_ct_val: /home/jovyan/misha/prep_data/vox2vec/amos_ct_val
+  abdomen_atlas: /home/jovyan/misha/prep_data/vox2vec/abdomen_atlas_1.0_mini
+  flare23_labeled_train: /home/jovyan/misha/prep_data/vox2vec/flare23_labeled_train
+  flare23_unlabeled_train: /home/jovyan/misha/prep_data/vox2vec/flare23_unlabeled_train
+  flare23_labeled_val: /home/jovyan/misha/prep_data/vox2vec/flare23_labeled_val
+  lidc: /home/jovyan/misha/prep_data/vox2vec/lidc
+  midrc_ricord_1a: /home/jovyan/misha/prep_data/vox2vec/midrc_ricord_1a
+  kits21: /home/jovyan/misha/prep_data/vox2vec/kits21
+  lits: /home/jovyan/misha/prep_data/vox2vec/lits
 
 # under this path all experiments' logs are saved
 logs_dir: /home/jovyan/misha/experiments/vox2vec_public
