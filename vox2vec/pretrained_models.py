@@ -14,19 +14,28 @@ class Vox2VecForScreener(nn.Module):
     def __init__(
             self,
             name: Literal[
+                'vicreg_dim32_nlst',
+                'vicreg_dim32_all',
+                'vicreg_dim32_0.1all',
+                'vicreg_dim32_0.01all',
+                'vicreg_dim128_all',
+                'vicreg_masked_dim32_all',
                 'simclr_dim32_nlst',
                 'simclr_dim32_all',
-                # 'simclr_dim32_0.1nlst',
-                # 'simclr_dim32_0.01nlst',
-                'moco_dim32_nlst',
+                'simclr_dim32_0.1all',
+                'simclr_dim32_0.01all',
                 # 'simclr_dim128_nlst',
                 'simclr_masked_dim32_all'
             ],
-            revision: str = 'f8008d46426a284132dabbbd1bfe79841f3339f2'
+            revision: str = '671c4c3a2d39ca979c6b061e81067ae56277dc8f'
     ):
         super().__init__()
 
-        self.out_channels = 32 if name != 'simclr_dim128_nlst' else 128
+        if name in ['simclr_dim128_nlst', 'vicreg_dim128_all']:
+            self.out_channels = 128
+        else:
+            self.out_channels = 32
+
         self.backbone = UNet3d(
             in_channels=1,
             stem_stride=1,
