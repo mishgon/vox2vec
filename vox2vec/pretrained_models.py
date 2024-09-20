@@ -19,15 +19,12 @@ class Vox2VecForScreener(nn.Module):
                 'vicreg_dim32_0.1all',
                 'vicreg_dim32_0.01all',
                 'vicreg_dim128_all',
-                'vicreg_masked_dim32_all',
                 'simclr_dim32_nlst',
                 'simclr_dim32_all',
                 'simclr_dim32_0.1all',
                 'simclr_dim32_0.01all',
-                # 'simclr_dim128_nlst',
-                'simclr_masked_dim32_all'
             ],
-            revision: str = 'd5e2ca610223ee2a4f539352457350d999b36eb4'
+            revision: str = 'c0ad5ec4ffd815a24ad1479c23f54e9bd995dedc'
     ):
         super().__init__()
 
