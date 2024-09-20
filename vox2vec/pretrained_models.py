@@ -27,7 +27,7 @@ class Vox2VecForScreener(nn.Module):
                 # 'simclr_dim128_nlst',
                 'simclr_masked_dim32_all'
             ],
-            revision: str = '671c4c3a2d39ca979c6b061e81067ae56277dc8f'
+            revision: str = 'd5e2ca610223ee2a4f539352457350d999b36eb4'
     ):
         super().__init__()
 
