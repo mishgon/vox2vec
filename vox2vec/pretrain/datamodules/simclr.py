@@ -141,6 +141,7 @@ class _SimCLRDataset(Dataset):
             # + get_random_sample(population=sorted(Path(prepared_data_dirs.flare23_unlabeled_train).iterdir()),
             #                     size=pretrain_data_fractions.flare23_unlabeled_train)
         )
+        print(f'Dataset size: {len(self.image_dirpaths)}', flush=True)
 
     def __len__(self):
         return self.num_images_per_epoch

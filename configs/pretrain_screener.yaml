@@ -10,20 +10,20 @@ defaults:
 
 pretrain_datamodule:
   pretrain_data_fractions:
-    nlst: 1.0
-    amos_ct_labeled_train: 1.0
-    amos_ct_unlabeled_train: 1.0
-    abdomen_atlas: 1.0
+    nlst: 0.1
+    amos_ct_labeled_train: 0.1
+    amos_ct_unlabeled_train: 0.1
+    abdomen_atlas: 0.1
     flare23_labeled_train: 0.0
     flare23_unlabeled_train: 0.0
-  spatial_augmentations:
-    min_voxel_spacing: [1.0, 1.0, 1.5]
-    max_voxel_spacing: [4.0, 4.0, 6.0]
-    crop_size: [96, 96, 64]
-  masking:
-    p: 0.9
-    ratio: 0.6
-    block_size: [24, 24, 16]
+  # spatial_augmentations:
+  #   min_voxel_spacing: [1.0, 1.0, 1.5]
+  #   max_voxel_spacing: [4.0, 4.0, 6.0]
+  #   crop_size: [96, 96, 64]
+  # masking:
+  #   p: 0.9
+  #   ratio: 0.6
+  #   block_size: [24, 24, 16]
 
 pretrain_model:
   lr: 0.0003
