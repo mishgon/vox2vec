@@ -49,12 +49,12 @@ class Vox2VecForScreener(nn.Module):
         )
         self.name = name
 
-        # weights_path = hf_hub_download(
-        #     repo_id='mishgon/vox2vec',
-        #     filename=f'{name}.pt',
-        #     revision=revision
-        # )
-        # self.load_state_dict(torch.load(weights_path))
+        weights_path = hf_hub_download(
+            repo_id='mishgon/vox2vec',
+            filename=f'{name}.pt',
+            revision=revision
+        )
+        self.load_state_dict(torch.load(weights_path))
 
     def forward(self, x: torch.Tensor) -> List[torch.Tensor]:
         return self.backbone(x)
