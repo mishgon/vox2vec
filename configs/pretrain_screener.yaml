@@ -10,10 +10,10 @@ defaults:
 
 pretrain_datamodule:
   pretrain_data_fractions:
-    nlst: 0.001
-    amos_ct_labeled_train: 0.001
-    amos_ct_unlabeled_train: 0.001
-    abdomen_atlas: 0.001
+    nlst: 0.0001
+    amos_ct_labeled_train: 0.0001
+    amos_ct_unlabeled_train: 0.0001
+    abdomen_atlas: 0.0001
     flare23_labeled_train: 0.0
     flare23_unlabeled_train: 0.0
   # spatial_augmentations:
