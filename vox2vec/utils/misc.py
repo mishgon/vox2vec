@@ -71,11 +71,15 @@ class ProgressParallel(Parallel):
 
 
 def get_random_sample(population: Sequence[Any], size: Union[float, int]) -> List[Any]:
+    if size == 0:
+        return []
+
     if isinstance(size, float):
-        assert 0.0 <= size <= 1.0
-        return random.sample(population, int(len(population) * size))
+        assert 0.0 < size <= 1.0
+        size = max(int(len(population) * size), 1)
+        return random.sample(population, size)
     elif isinstance(size, int):
-        assert 0 <= size <= len(population)
+        assert 0 < size <= len(population)
         return random.sample(population, size)
     else:
         raise TypeError(type(size))
