@@ -11,9 +11,9 @@ defaults:
 pretrain_datamodule:
   pretrain_data_fractions:
     nlst: 1.0
-    amos_ct_labeled_train: 0.0
-    amos_ct_unlabeled_train: 0.0
-    abdomen_atlas: 0.0
+    amos_ct_labeled_train: 1.0
+    amos_ct_unlabeled_train: 1.0
+    abdomen_atlas: 1.0
     flare23_labeled_train: 0.0
     flare23_unlabeled_train: 0.0
   # spatial_augmentations:
@@ -26,7 +26,7 @@ pretrain_datamodule:
   #   block_size: [24, 24, 16]
 
 pretrain_model:
-  lr: 0.0003
+  lr: 0.01
 
 ckpt_path: null
 
