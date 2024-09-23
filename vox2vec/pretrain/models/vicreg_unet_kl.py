@@ -72,7 +72,7 @@ class VICRegUNetKL(pl.LightningModule):
             stride=self.backbone.stem_stride,
             mode='trilinear'
         )
-        self.log('vicreg/mean_abs_features', means.abs().mean(), on_step=True, on_epoch=True)
+        self.log('vicreg/features_std', means.std(), on_step=True, on_epoch=True)
         stds = batched_take_features_from_map(
             std_maps_batch,
             voxel_indices_batch,

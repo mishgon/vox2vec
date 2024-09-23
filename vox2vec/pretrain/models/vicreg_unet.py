@@ -61,7 +61,7 @@ class VICRegUNet(pl.LightningModule):
             stride=self.backbone.stem_stride,
             mode='trilinear'
         )
-        self.log('vicreg/mean_abs_features', features.abs().mean(), on_step=True, on_epoch=True)
+        self.log('vicreg/features_std', features.std(), on_step=True, on_epoch=True)
         embeds = self.projector(features)
         return embeds
 
