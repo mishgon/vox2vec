@@ -1,7 +1,7 @@
 defaults:
   - pretrain_datamodule: simclr
   - backbone: unet_fullres
-  - pretrain_model: vicreg_unet
+  - pretrain_model: vicreg_unet_kl
   - trainer: default
   - paths: default
   - hydra: default
@@ -27,10 +27,6 @@ pretrain_datamodule:
 
 pretrain_model:
   lr: 0.005
-
-backbone:
-  out_channels: 128
-  final_ln: true
 
 ckpt_path: null
 

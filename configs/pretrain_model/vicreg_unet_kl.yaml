@@ -1,0 +1,12 @@
+_target_: vox2vec.pretrain.models.vicreg_unet_kl.VICRegUNetKL
+backbone: ${backbone}
+proj_hidden_dim: 8192
+proj_out_dim: 8192
+i_weight: 25.0
+v_weight: 25.0
+c_weight: 1.0
+beta: 0.001
+lr: 0.01
+weight_decay: 0.000001
+warmup_steps: 10_000
+total_steps: ${trainer.max_steps}
