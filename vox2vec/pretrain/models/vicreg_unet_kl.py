@@ -115,10 +115,10 @@ class VICRegUNetKL(pl.LightningModule):
             + self.v_weight * v_reg
             + self.c_weight * c_reg
         )
-        self.log(f'pretrain/vic_reg', vic_reg, on_epoch=True, on_step=True)
+        self.log(f'vicreg/vic_reg', vic_reg, on_epoch=True, on_step=True)
 
         kl_reg = (kl_reg_1 + kl_reg_2) / 2
-        self.log(f'pretrain/kl_reg', kl_reg, on_epoch=True, on_step=True)
+        self.log(f'vicreg/kl_reg', kl_reg, on_epoch=True, on_step=True)
 
         loss = vic_reg + self.beta * kl_reg
         self.log(f'vicreg/loss', loss, on_epoch=True, on_step=True)
