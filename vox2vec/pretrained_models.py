@@ -18,13 +18,15 @@ class Vox2VecForScreener(nn.Module):
                 'vicreg_dim32_all',
                 'vicreg_dim32_0.1all',
                 'vicreg_dim32_0.01all',
+                'vicreg_dim32_0.001all',
+                'vicreg_dim32_0.0001all',
                 'vicreg_dim128_all',
-                'simclr_dim32_nlst',
-                'simclr_dim32_all',
-                'simclr_dim32_0.1all',
-                'simclr_dim32_0.01all',
+                # 'simclr_dim32_nlst',
+                # 'simclr_dim32_all',
+                # 'simclr_dim32_0.1all',
+                # 'simclr_dim32_0.01all',
             ],
-            revision: str = 'b141733e692867646c029414521d5616be0854d9'
+            revision: str = 'b229a25fc48cc73f6eb7a3582dee36a308046f7f'
     ):
         super().__init__()
 
@@ -42,7 +44,7 @@ class Vox2VecForScreener(nn.Module):
             fpn_depths=((1, 1), (2, 1), (4, 1), 8),
             stem_kernel_size=7,
             stem_padding=3,
-            final_ln=False,
+            final_ln=True,
             final_affine=False,
             final_gelu=False,
             mask_token=True
