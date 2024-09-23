@@ -26,11 +26,7 @@ pretrain_datamodule:
   #   block_size: [24, 24, 16]
 
 pretrain_model:
-  lr: 0.005
-
-backbone:
-  out_channels: 128
-  final_ln: true
+  lr: 0.001
 
 ckpt_path: null
 
