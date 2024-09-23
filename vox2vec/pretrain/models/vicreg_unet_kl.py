@@ -34,6 +34,7 @@ class VICRegUNetKL(pl.LightningModule):
             fpn_stem_stride=backbone.stem_stride,
             fpn_out_channels=backbone.fpn_out_channels,
         )
+        nn.init.constant_(self.logvar_head.convs[0].bias, -13.81551)
         self.projector = nn.Sequential(
             nn.Linear(backbone.out_channels, proj_hidden_dim),
             nn.LayerNorm(proj_hidden_dim),
