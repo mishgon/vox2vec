@@ -16,4 +16,4 @@ sweep:
 callbacks:
   git_info:
     _target_: hydra_callbacks.GitInfo
-    clean: true
+    clean: false  # true

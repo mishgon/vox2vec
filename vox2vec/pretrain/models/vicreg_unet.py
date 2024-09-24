@@ -34,7 +34,7 @@ class VICRegUNet(pl.LightningModule):
             nn.Linear(proj_hidden_dim, proj_hidden_dim),
             nn.LayerNorm(proj_hidden_dim),
             nn.GELU(),
-            nn.Linear(proj_hidden_dim, proj_out_dim)
+            nn.Linear(proj_hidden_dim, proj_out_dim, bias=False)
         )
 
         self.i_weight = i_weight
