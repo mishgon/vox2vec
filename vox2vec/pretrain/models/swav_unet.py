@@ -1,4 +1,5 @@
 from typing import Optional, Sequence
+import math
 
 import torch
 from torch import nn
@@ -9,19 +10,25 @@ from vox2vec.nn.unet_3d import UNet3d
 from vox2vec.nn.functional import batched_take_features_from_map
 
 
-class SimCLRUNet(pl.LightningModule):
+class SwAVUNet(pl.LightningModule):
     def __init__(
             self,
             backbone: UNet3d,
             proj_hidden_dim: int = 2048,
             proj_out_dim: int = 128,
+            num_prototypes: int = 1024,
             temp: float = 0.1,
+            sharpen_temp: float = 0.25,
+            num_sinkhorn_iters: int = 3,
+            memax_weight: float = 0.0,
             lr: float = 0.01,
             weight_decay: float = 1e-6,
             warmup_steps: Optional[int] = None,
             total_steps: Optional[int] = None,
     ):
         super().__init__()
+
+        self.save_hyperparameters(ignore='backbone')
 
         self.backbone = backbone
         self.projector = nn.Sequential(
@@ -33,15 +40,21 @@ class SimCLRUNet(pl.LightningModule):
             nn.GELU(),
             nn.Linear(proj_hidden_dim, proj_out_dim, bias=False)
         )
+        self.prototypes = nn.Parameter(torch.zeros(num_prototypes, proj_out_dim))
+        nn.init.uniform_(self.prototypes, -(1. / proj_out_dim) ** 0.5, (1. / proj_out_dim) ** 0.5)
 
+        self.num_prototypes = num_prototypes
         self.temp = temp
+        self.sharpen_temp = sharpen_temp
+        self.num_sinkhorn_iters = num_sinkhorn_iters
+        self.memax_weight = memax_weight
         self.lr = lr
         self.weight_decay = weight_decay
         self.warmup_steps = warmup_steps
         self.total_steps = total_steps
 
-    def forward(self, images: torch.Tensor) -> torch.Tensor:
-        return self.backbone(images)
+    def forward(self, patches):
+        return self.backbone(patches)
 
     def forward_voxel_embeds(
             self,
@@ -57,7 +70,14 @@ class SimCLRUNet(pl.LightningModule):
             mode='trilinear'
         )
         embeds = F.normalize(self.projector(features))
-        return embeds
+        prototypes = F.normalize(self.prototypes)
+        logits = embeds @ prototypes.T / self.temp
+        targets = torch.softmax(logits.detach() / self.sharpen_temp, dim=1)
+        if self.num_sinkhorn_iters > 0:
+            targets = self._sinkhorn(targets)
+        probs = torch.softmax(logits, dim=1)
+        memax_reg = math.log(self.num_prototypes) - entropy(probs.mean(dim=0), dim=0)
+        return logits, targets, memax_reg
 
     def training_step(self, batch, batch_idx):
         # batch = batch['pretrain']
@@ -65,20 +85,23 @@ class SimCLRUNet(pl.LightningModule):
         (images_batch_1, masks_batch_1, voxel_indices_batch_1,
          images_batch_2, masks_batch_2, voxel_indices_batch_2) = batch
 
-        embeds_1 = self.forward_voxel_embeds(images_batch_1, masks_batch_1, voxel_indices_batch_1)
-        embeds_2 = self.forward_voxel_embeds(images_batch_2, masks_batch_2, voxel_indices_batch_2)
+        logits_1, targets_1, memax_reg_1 = self.forward_voxel_embeds(
+            images_batch_1, masks_batch_1, voxel_indices_batch_1
+        )
+        logits_2, targets_2, memax_reg_2 = self.forward_voxel_embeds(
+            images_batch_2, masks_batch_2, voxel_indices_batch_2
+        )
 
-        logits_11 = torch.matmul(embeds_1, embeds_1.T) / self.temp
-        logits_11.fill_diagonal_(float('-inf'))
-        logits_12 = torch.matmul(embeds_1, embeds_2.T) / self.temp
-        logits_22 = torch.matmul(embeds_2, embeds_2.T) / self.temp
-        logits_22.fill_diagonal_(float('-inf'))
-        logits_1 = torch.cat([logits_12, logits_11], dim=1)
-        logits_2 = torch.cat([logits_12.T, logits_22], dim=1)
-        targets = torch.arange(len(logits_1), device=self.device)
+        bootstrap_loss_1 = F.cross_entropy(logits_1, targets_2)
+        bootstrap_loss_2 = F.cross_entropy(logits_2, targets_1)
+        bootstrap_loss = (bootstrap_loss_1 + bootstrap_loss_2) / 2
+        self.log('swav/bootstrap_loss', bootstrap_loss, on_epoch=True, on_step=True)
 
-        loss = (F.cross_entropy(logits_1, targets) + F.cross_entropy(logits_2, targets)) / 2
-        self.log(f'simclr/loss', loss, on_epoch=True, on_step=True)
+        memax_reg = (memax_reg_1 + memax_reg_2) / 2
+        self.log('swav/memax_reg', memax_reg, on_epoch=True, on_step=True)
+
+        loss = bootstrap_loss + self.memax_weight * memax_reg
+        self.log('swav/loss', loss, on_epoch=True, on_step=True)
 
         return loss
 
@@ -115,3 +138,22 @@ class SimCLRUNet(pl.LightningModule):
             # skip device transfer for the val dataloader
             return batch
         return super().transfer_batch_to_device(batch, device, dataloader_idx)
+
+    @torch.no_grad()
+    def _sinkhorn(self, probas: torch.Tensor) -> torch.Tensor:
+        batch_size, num_prototypes = probas.shape
+        probas = probas / probas.sum()
+
+        for _ in range(self.num_sinkhorn_iters):
+            probas /= probas.sum(dim=0)
+            probas /= num_prototypes
+
+            probas /= probas.sum(dim=1, keepdim=True)
+            probas /= batch_size
+
+        probas *= batch_size
+        return probas
+
+
+def entropy(p: torch.Tensor, dim: int) -> torch.Tensor:
+    return torch.sum(torch.log(p ** (-p)), dim=dim)
