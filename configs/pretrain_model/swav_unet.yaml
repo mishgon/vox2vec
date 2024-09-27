@@ -1,13 +1,13 @@
 _target_: vox2vec.pretrain.models.swav_unet.SwAVUNet
 backbone: ${backbone}
-proj_hidden_dim: 2048
-proj_out_dim: 128
-num_prototypes: 1024
+# proj_hidden_dim: 2048
+# proj_out_dim: 128
+num_prototypes: 512
 temp: 0.1
 sharpen_temp: 0.25
 num_sinkhorn_iters: 3
 memax_weight: 0.0
-lr: 0.01
+lr: 0.0003
 weight_decay: 0.000001
 warmup_steps: 10_000
 total_steps: ${trainer.max_steps}
