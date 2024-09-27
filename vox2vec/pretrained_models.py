@@ -21,17 +21,46 @@ class Vox2VecForScreener(nn.Module):
                 'lowres_0.001all',
                 'lowres_0.0001all',
                 'lowres_nlst',
+                # 
+                'fullres_all',
+                'fullres_0.1all',
+                'fullres_0.01all',
+                'fullres_0.001all',
+                'fullres_0.0001all',
+                'fullres_nlst',
+                # 
+                'vicreg_fullres_all',
+                'vicreg_fullres_0.1all',
+                'vicreg_fullres_0.01all',
+                'vicreg_fullres_nlst',
+                'vicreg_fullres_dim128_all',
+                # 
+                'vicreg_fullres_all_lr0.001',
+                'vicreg_fullres_0.1all_lr0.001',
+                'vicreg_fullres_0.01all_lr0.001',
+                'vicreg_fullres_0.001all_lr0.001',
+                'vicreg_fullres_0.0001all_lr0.001',
+                'vicreg_fullres_nlst_lr0.001',
+                'vicreg_fullres_dim128_all_lr0.001',
             ],
-            revision: str = '01e9c1d0cb8ac8a8967f4ae3a4f2e72faaf54334'
+            revision: str = 'e0d56f30a8d8bfb61bc58acf2d38e5ee85ee22cf'
     ):
         super().__init__()
 
         self.name = name
+
+        if 'lowres' in name:
+            self.out_channels = 96
+        elif 'dim128' in name:
+            self.out_channels = 128
+        else:
+            self.out_channels = 32
+
         if 'lowres' in name:
             self.backbone = UNet3d(
                 in_channels=1,
                 stem_stride=(3, 3, 2),
-                out_channels=96,
+                out_channels=self.out_channels,
                 fpn_out_channels=(96, 192, 384, 768),
                 fpn_hidden_factors=4.0,
                 fpn_depths=((3, 1), (3, 1), (9, 1), 3),
@@ -43,9 +72,20 @@ class Vox2VecForScreener(nn.Module):
                 mask_token=True
             )
         else:
-            raise NotImplementedError
-
-        self.out_channels = self.backbone.out_channels
+            self.backbone = UNet3d(
+                in_channels=1,
+                stem_stride=1,
+                out_channels=self.out_channels,
+                fpn_out_channels=(16, 64, 256, 1024),
+                fpn_hidden_factors=(1.0, 1.0, 4.0, 4.0),
+                fpn_depths=((1, 1), (2, 1), (4, 1), 8),
+                stem_kernel_size=7,
+                stem_padding=3,
+                final_ln=False,
+                final_affine=False,
+                final_gelu=False,
+                mask_token=True
+            )
 
         weights_path = hf_hub_download(
             repo_id='mishgon/vox2vec',
