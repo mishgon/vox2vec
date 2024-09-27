@@ -1,7 +1,7 @@
 defaults:
   - pretrain_datamodule: simclr
   - backbone: unet_fullres
-  - pretrain_model: simclr_unet_kl
+  - pretrain_model: vicreg_unet
   - trainer: default
   - paths: default
   - hydra: default
@@ -24,12 +24,11 @@ pretrain_datamodule:
   #   p: 0.5
   #   ratio: 0.6
   #   block_size: [12, 12, 8]
-  num_workers: 16
-  prefetch_factor: 3
+  num_workers: 8
+  prefetch_factor: 1
 
-trainer:
-  precision: 16-mixed
-  max_steps: 150_000
+pretrain_model:
+  lr: 0.001
 
 ckpt_path: null
 

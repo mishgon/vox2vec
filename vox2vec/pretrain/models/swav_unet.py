@@ -14,9 +14,7 @@ class SwAVUNet(pl.LightningModule):
     def __init__(
             self,
             backbone: UNet3d,
-            proj_hidden_dim: int = 2048,
-            proj_out_dim: int = 128,
-            num_prototypes: int = 1024,
+            num_prototypes: int = 512,
             temp: float = 0.1,
             sharpen_temp: float = 0.25,
             num_sinkhorn_iters: int = 3,
@@ -31,17 +29,10 @@ class SwAVUNet(pl.LightningModule):
         self.save_hyperparameters(ignore='backbone')
 
         self.backbone = backbone
-        self.projector = nn.Sequential(
-            nn.Linear(backbone.out_channels, proj_hidden_dim),
-            nn.LayerNorm(proj_hidden_dim),
-            nn.GELU(),
-            nn.Linear(proj_hidden_dim, proj_hidden_dim),
-            nn.LayerNorm(proj_hidden_dim),
-            nn.GELU(),
-            nn.Linear(proj_hidden_dim, proj_out_dim, bias=False)
-        )
-        self.prototypes = nn.Parameter(torch.zeros(num_prototypes, proj_out_dim))
-        nn.init.uniform_(self.prototypes, -(1. / proj_out_dim) ** 0.5, (1. / proj_out_dim) ** 0.5)
+        self.projector = nn.Identity()  # NOTE
+        prototype_dim = backbone.out_channels
+        self.prototypes = nn.Parameter(torch.zeros(num_prototypes, prototype_dim))
+        nn.init.uniform_(self.prototypes, -(1. / prototype_dim) ** 0.5, (1. / prototype_dim) ** 0.5)
 
         self.num_prototypes = num_prototypes
         self.temp = temp
